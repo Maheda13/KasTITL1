@@ -4,7 +4,7 @@
 
 // ===== KONFIGURASI =====
 // Ganti dengan URL Web App GAS setelah deploy
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvdQSGhtj4_sp58CW6rfZhuAzHEHuD_MeJSXCZ2RuVT4vQ3PFNPmM3U_Rgt3ZBskvSwQ/exec';
+const GAS_URL = '';
 
 const START_DATE = new Date('2026-07-27');
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -99,29 +99,29 @@ function confirmAction(msg, confirmText) {
 }
 
 // ===== NAVIGATION =====
-let settingsOpen = false;
-
-function showPage(page) {
-    settingsOpen = false;
-    document.getElementById('gearBtn').classList.remove('active');
+function navTo(page) {
+    closeSidebar();
+    // Update active link
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    const links = document.querySelectorAll('.sidebar-link');
+    const idx = ['students','input','recap','settings'].indexOf(page);
+    if (idx >= 0) links[idx].classList.add('active');
+    // Show page
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const tabs = document.querySelectorAll('.tab');
-    const idx = ['students','input','recap'].indexOf(page);
-    if (idx >= 0) tabs[idx].classList.add('active');
+    // Render
     if (page === 'students') renderStudentList();
     if (page === 'input') renderInputPage();
     if (page === 'recap') renderRecap();
+    if (page === 'settings') renderSettings();
 }
 
-function toggleSettings() {
-    settingsOpen = !settingsOpen;
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('page-settings').classList.add('active');
-    document.getElementById('gearBtn').classList.toggle('active', settingsOpen);
-    renderSettings();
+function toggleSidebar() {
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebarOverlay').classList.remove('show');
 }
 
 // ===== SISWA =====
@@ -295,7 +295,7 @@ async function resetAll() {
     localStorage.removeItem('kas_titl1');
     state = defaultState(); saveLocal();
     if (GAS_URL) await gasGet('resetAll', {});
-    toggleSettings();
+    navTo('settings');
     renderStudentList();
     toast('Semua data dihapus', 'info');
 }
@@ -580,11 +580,7 @@ function downloadFile(content, filename, type) {
     URL.revokeObjectURL(url);
 }
 
-// ===== PWA =====
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBanner').classList.add('show'); });
-function installApp() { if (!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt.userChoice.then(c => { if (c.outcome==='accepted') document.getElementById('installBanner').classList.remove('show'); deferredPrompt=null; }); }
-function dismissInstall() { document.getElementById('installBanner').classList.remove('show'); }
+// ===== PWA SERVICE WORKER =====
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 // ===== INIT =====

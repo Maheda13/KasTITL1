@@ -13,37 +13,16 @@
 </head>
 <body>
     <header>
+        <button class="burger-btn" onclick="toggleSidebar()">☰</button>
         <h1>📋 KAS TITL 1</h1>
-        <button class="gear-btn" id="gearBtn" onclick="toggleSettings()" title="Pengaturan">⚙️</button>
+        <span></span>
     </header>
 
-    <nav class="tabs" id="mainTabs">
-        <div class="tab active" onclick="showPage('students')">
-            <span class="tab-icon">👥</span>Siswa
-        </div>
-        <div class="tab" onclick="showPage('input')">
-            <span class="tab-icon">💰</span>Input Kas
-        </div>
-        <div class="tab" onclick="showPage('recap')">
-            <span class="tab-icon">📊</span>Rekap
-        </div>
-    </nav>
-
     <main>
-        <div class="install-banner" id="installBanner">
-            <span>📲 Install aplikasi ini ke HP?</span>
-            <div style="display:flex;gap:6px;align-items:center;">
-                <button class="btn" onclick="installApp()">Install</button>
-                <button class="dismiss" onclick="dismissInstall()">✕</button>
-            </div>
-        </div>
-
         <!-- SISWA -->
         <div id="page-students" class="page active">
             <div class="card">
-                <div class="student-header">
-                    <h2>👥 Daftar Siswa (<span id="studentCount">0</span>)</h2>
-                </div>
+                <h2>👥 Daftar Siswa (<span id="studentCount">0</span>)</h2>
                 <ul class="student-list" id="studentList"></ul>
                 <div class="pagination" id="studentPagination"></div>
             </div>
@@ -133,7 +112,7 @@
         </div>
     </main>
 
-    <!-- Modal Konfirmasi Umum -->
+    <!-- Modal Konfirmasi -->
     <div class="confirm-overlay" id="confirmModal">
         <div class="confirm-box">
             <div class="confirm-icon">❓</div>
@@ -143,6 +122,22 @@
                 <button class="btn btn-outline" id="confirmNo">Batal</button>
                 <button class="btn btn-danger settings-danger" id="confirmYes" style="flex:1;">Ya, Hapus</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()">
+        <div class="sidebar" onclick="event.stopPropagation()">
+            <div class="sidebar-brand">📋 KAS TITL 1</div>
+            <nav class="sidebar-nav">
+                <a class="sidebar-link active" onclick="navTo('students')">👥 Siswa</a>
+                <a class="sidebar-link" onclick="navTo('input')">💰 Input Kas</a>
+                <a class="sidebar-link" onclick="navTo('recap')">📊 Rekap</a>
+            </nav>
+            <div class="sidebar-divider"></div>
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" onclick="navTo('settings')">⚙️ Pengaturan</a>
+            </nav>
         </div>
     </div>
 

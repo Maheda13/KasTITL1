@@ -17,36 +17,55 @@ header {
     color: white; padding: 14px 16px;
     position: sticky; top: 0; z-index: 100;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; gap: 12px;
 }
-header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 1px; }
+header h1 { flex: 1; font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; }
 
-.gear-btn {
-    background: none; border: none; color: white; font-size: 1.4rem;
-    cursor: pointer; padding: 6px; border-radius: 8px; transition: background 0.2s;
+/* ===== Burger Button ===== */
+.burger-btn {
+    background: none; border: none; color: white;
+    font-size: 1.4rem; cursor: pointer; padding: 6px 8px;
+    border-radius: 8px; transition: background 0.2s;
 }
-.gear-btn:hover { background: rgba(255,255,255,0.15); }
-.gear-btn.active { background: rgba(79,195,247,0.3); }
+.burger-btn:hover { background: rgba(255,255,255,0.15); }
 
-/* ===== Tabs ===== */
-.tabs {
-    display: flex; background: #16213e;
-    border-bottom: 2px solid #0f3460; overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    position: sticky; top: 52px; z-index: 99;
+/* ===== Sidebar ===== */
+.sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 200;
 }
-.tab {
-    flex: 1; padding: 10px 6px; text-align: center; cursor: pointer;
-    color: #8899aa; font-size: 0.78rem; font-weight: 600;
-    border-bottom: 3px solid transparent; transition: all 0.2s;
-    white-space: nowrap; min-width: 70px; user-select: none;
+.sidebar-overlay.show { display: block; }
+
+.sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 260px; background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    transform: translateX(-100%); transition: transform 0.3s ease;
+    z-index: 201; overflow-y: auto;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
 }
-.tab:hover { color: #e0e0e0; background: rgba(255,255,255,0.05); }
-.tab.active { color: #4fc3f7; border-bottom-color: #4fc3f7; background: rgba(79,195,247,0.08); }
-.tab-icon { display: block; font-size: 1.2rem; margin-bottom: 2px; }
+.sidebar-overlay.show .sidebar { transform: translateX(0); }
+
+.sidebar-brand {
+    padding: 18px 16px; font-size: 1.05rem; font-weight: 700;
+    color: white; border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; color: #8899aa;
+    font-size: 0.92rem; font-weight: 600; cursor: pointer;
+    border-left: 3px solid transparent; transition: all 0.2s;
+    text-decoration: none;
+}
+.sidebar-link:hover, .sidebar-link.active {
+    color: #4fc3f7; background: rgba(79,195,247,0.08);
+    border-left-color: #4fc3f7;
+}
+
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0; }
 
 /* ===== Layout ===== */
-main { max-width: 800px; margin: 0 auto; padding: 12px; padding-bottom: 80px; }
+main { max-width: 800px; margin: 0 auto; padding: 12px; padding-bottom: 40px; }
 .page { display: none; }
 .page.active { display: block; }
 
@@ -96,6 +115,7 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .btn-outline { background: transparent; color: #1a1a2e; border: 2px solid #e0e0e0; }
 .btn-outline:hover { border-color: #1a1a2e; }
 .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+.btn:disabled, .btn[disabled] { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
@@ -201,21 +221,6 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .pagination .btn { padding: 6px 14px; font-size: 0.82rem; }
 .pagination .page-info { font-size: 0.82rem; color: #666; }
 
-/* ===== Install Banner ===== */
-.install-banner {
-    background: linear-gradient(135deg, #0f3460, #1a1a2e); color: white;
-    padding: 12px 16px; border-radius: 10px; margin-bottom: 12px;
-    display: none; align-items: center; justify-content: space-between; gap: 10px;
-}
-.install-banner.show { display: flex; }
-.install-banner .btn { background: #4fc3f7; color: #1a1a2e; padding: 6px 14px; font-size: 0.8rem; white-space: nowrap; }
-.install-banner .dismiss { background: none; color: #aaa; border: none; cursor: pointer; font-size: 1.2rem; padding: 4px; }
-
-/* ===== Disabled Buttons ===== */
-.btn:disabled, .btn[disabled] {
-    opacity: 0.4; cursor: not-allowed; pointer-events: none;
-}
-
 /* ===== Toast Notification ===== */
 .toast {
     position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
@@ -230,7 +235,7 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .toast.info { background: #0f3460; }
 @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-/* ===== Confirm Modal (custom) ===== */
+/* ===== Confirm Modal ===== */
 .confirm-overlay {
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
     z-index: 250; align-items: center; justify-content: center;
@@ -248,24 +253,34 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .confirm-actions { display: flex; gap: 10px; }
 .confirm-actions .btn { flex: 1; text-align: center; min-height: 44px; }
 
-/* ===== Utility Classes ===== */
-.student-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.student-header h2 { margin: 0; }
-
+/* ===== Utility ===== */
 .desc-text { font-size: 0.82rem; color: #666; margin-bottom: 12px; }
 .count-text { font-size: 0.8rem; color: #888; margin-bottom: 8px; }
-
 .holiday-item {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.88rem;
 }
 .holiday-item:last-child { border-bottom: none; }
-
 .settings-danger { padding: 10px 20px; font-size: 0.9rem; }
 
 /* ===== Responsive ===== */
 @media (max-width: 480px) {
-    .day-grid { grid-template-columns: repeat(4, 1fr); }
-    main { padding: 10px; padding-bottom: 80px; }
+    main { padding: 10px; padding-bottom: 40px; }
     .card { padding: 14px; }
+
+    /* Day grid: 4 kolom di mobile */
+    .day-grid { grid-template-columns: repeat(4, 1fr); }
+
+    /* Payment table — mobile compact */
+    .pay-table .th-num, .pay-table .td-num { display: none; }
+    .pay-table th.th-tunggakan, .pay-table td.td-tunggakan { width: 60px; }
+    .pay-table th.th-bayar, .pay-table td.td-bayar { width: auto; }
+    .pay-table th.th-aksi, .pay-table td.td-aksi { width: 48px; }
+    .pay-table th, .pay-table td { padding: 8px 6px; font-size: 0.82rem; }
+    .pay-input { width: 70px; padding: 5px 4px; font-size: 0.82rem; }
+    .pay-btn { padding: 5px 8px; font-size: 0.75rem; }
+
+    /* Summary cards: 2 kolom lebih compact */
+    .summary-card { padding: 10px; }
+    .summary-card .num { font-size: 1.3rem; }
 }
