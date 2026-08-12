@@ -4,7 +4,7 @@
 
 // ===== KONFIGURASI =====
 // Ganti dengan URL Web App GAS setelah deploy
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvdQSGhtj4_sp58CW6rfZhuAzHEHuD_MeJSXCZ2RuVT4vQ3PFNPmM3U_Rgt3ZBskvSwQ/exec';
+const GAS_URL = '';
 
 const START_DATE = new Date('2026-07-27');
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -314,11 +314,17 @@ function getAllPaymentDates() {
     return dates;
 }
 
-// Generate payment dates including future days (untuk bayar advance)
-function getAllPaymentDatesWithFuture(daysAhead) {
+function getStudentUnpaid(name) {
+    const pastDates = getAllPaymentDates(); // hanya sampai hari ini
+    const unpaid = pastDates.filter(d => !(state.payments[d] && state.payments[d][name]));
+    return { dates: unpaid, count: unpaid.length, totalRp: unpaid.length * 1000 };
+}
+
+// Generate payment dates sampai jumlah hari tertentu dari sekarang
+function getAllPaymentDatesUntil(daysAhead) {
     const dates = [];
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + (daysAhead || 60));
+    endDate.setDate(endDate.getDate() + daysAhead);
     let d = new Date(START_DATE);
     while (d <= endDate) {
         const ds = formatDate(d);
@@ -328,10 +334,11 @@ function getAllPaymentDatesWithFuture(daysAhead) {
     return dates;
 }
 
-function getStudentUnpaid(name) {
-    const allDates = getAllPaymentDatesWithFuture(60);
-    const unpaid = allDates.filter(d => !(state.payments[d] && state.payments[d][name]));
-    return { dates: unpaid, count: unpaid.length, totalRp: unpaid.length * 1000 };
+// Semua tanggal belum bayar (termasuk masa depan, untuk proses pembayaran advance)
+function getStudentAllUnpaid(name) {
+    // Ambil 1 tahun dulu — cukup untuk bayar 1 semester
+    const allDates = getAllPaymentDatesUntil(365);
+    return allDates.filter(d => !(state.payments[d] && state.payments[d][name]));
 }
 
 function renderInputPage() {
@@ -347,22 +354,17 @@ function renderInputPage() {
     }
 
     // Hitung tunggakan semua siswa
-    const pastDates = getAllPaymentDates(); // sampai hari ini
-    let totalPastUnpaid = 0;
-    let totalFutureUnpaid = 0;
+    let totalUnpaidDays = 0;
     const studentData = state.students.map(name => {
         const { dates, count, totalRp } = getStudentUnpaid(name);
-        const pastUnpaid = dates.filter(d => pastDates.includes(d)).length;
-        const futureUnpaid = count - pastUnpaid;
-        totalPastUnpaid += pastUnpaid;
-        totalFutureUnpaid += futureUnpaid;
+        totalUnpaidDays += count;
         return { name, unpaidDays: count, unpaidRp: totalRp, dates };
     });
 
     // Summary
-    const futureNote = totalFutureUnpaid > 0 ? ` <span style="color:#0f3460;">+${totalFutureUnpaid} hari ke depan</span>` : '';
+    const pastDates = getAllPaymentDates(); // sampai hari ini
     summary.innerHTML = `<div class="count-text" style="margin-bottom:12px;">
-        📋 ${state.students.length} siswa &bull; ${pastDates.length} hari wajib bayar &bull; ${totalPastUnpaid} hari belum lunas${futureNote}
+        📋 ${state.students.length} siswa &bull; ${pastDates.length} hari wajib bayar &bull; ${totalUnpaidDays} hari belum lunas
     </div>`;
 
     // Pagination
@@ -430,7 +432,7 @@ async function payStudent(name) {
     }
 
     const daysToPay = amount / 1000;
-    const { dates: unpaidDates } = getStudentUnpaid(name);
+    const unpaidDates = getStudentAllUnpaid(name); // termasuk masa depan untuk advance
 
     if (unpaidDates.length === 0) {
         toast(`${name} sudah lunas!`, 'info');
@@ -456,7 +458,7 @@ async function payStudent(name) {
     const remaining = daysToPay - toPay.length;
     let msg = `✅ ${name} dibayar ${toPay.length} hari (Rp${(toPay.length * 1000).toLocaleString('id-ID')})`;
     if (remaining > 0) {
-        msg += ` — ${remaining} hari untuk ke depan`;
+        msg += ` — Rp${(remaining * 1000).toLocaleString('id-ID')} (${remaining} hari) tidak terpakai (melebihi jadwal yang tersedia)`;
     }
 
     toast(msg);
