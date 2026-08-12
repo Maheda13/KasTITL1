@@ -1,10 +1,10 @@
-const CACHE_NAME = 'kas-titl1-v1';
+const CACHE_NAME = 'kas-titl1-v3';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './style.css',
+  './app.js',
+  './manifest.json'
 ];
 
 self.addEventListener('install', e => {
