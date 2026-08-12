@@ -4,7 +4,7 @@
 
 // ===== KONFIGURASI =====
 // Ganti dengan URL Web App GAS setelah deploy
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvdQSGhtj4_sp58CW6rfZhuAzHEHuD_MeJSXCZ2RuVT4vQ3PFNPmM3U_Rgt3ZBskvSwQ/exec';
+const GAS_URL = '';
 
 const START_DATE = new Date(2026, 6, 27); // 27 Juli 2026 jam 00:00 WIB (konsisten dengan parseDate)
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -15,16 +15,26 @@ let state = loadState();
 let recapPage = 1;
 let studentPage = 1;
 let payPage = 1;
+let iuranPage = 1;
+let iuranBayarId = null; // ID iuran yang sedang dibayar
+let expensePage = 1;
 const LIST_PER_PAGE = 15;
 
 function defaultState() {
-    return { students: [], paymentDays: [1,2,3,4,5,6], payments: {}, holidays: [] };
+    return { students: [], paymentDays: [1,2,3,4,5,6], payments: {}, holidays: [], iuran: [], pengeluaran: [] };
 }
+
+function genId(prefix) { return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
 
 function loadState() {
     try {
         const s = JSON.parse(localStorage.getItem('kas_titl1'));
-        if (s && s.students) { if (!s.holidays) s.holidays = []; return s; }
+        if (s && s.students) {
+            if (!s.holidays) s.holidays = [];
+            if (!s.iuran) s.iuran = [];
+            if (!s.pengeluaran) s.pengeluaran = [];
+            return s;
+        }
     } catch(e) {}
     return defaultState();
 }
@@ -95,6 +105,8 @@ async function loadDataFromGAS(force = false) {
         state.students = result.data.students || [];
         state.payments = result.data.payments || {};
         state.holidays = result.data.holidays || [];
+        state.iuran = result.data.iuran || [];
+        state.pengeluaran = result.data.pengeluaran || [];
         if (result.data.settings) state.paymentDays = result.data.settings.paymentDays || [1,2,3,4,5,6];
         saveLocal();
         lastSyncTime = now;
@@ -166,13 +178,16 @@ function navTo(page) {
     closeSidebar();
     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
     const links = document.querySelectorAll('.sidebar-link');
-    const idx = ['students','input','recap','settings'].indexOf(page);
+    const idx = ['students','input','recap','iuran','expense','settings'].indexOf(page);
     if (idx >= 0) links[idx].classList.add('active');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + page).classList.add('active');
+    const el = document.getElementById('page-' + page);
+    if (el) el.classList.add('active');
     if (page === 'students') renderStudentList();
     if (page === 'input') renderInputPage();
     if (page === 'recap') renderRecap();
+    if (page === 'iuran') { iuranBayarId = null; renderIuran(); }
+    if (page === 'expense') renderExpense();
     if (page === 'settings') renderSettings();
 }
 
@@ -396,6 +411,271 @@ async function resetAll() {
     if (GAS_URL) queueSync('resetAll', {});
 }
 
+// ===== IURAN INSIDENAL =====
+function renderIuran() {
+    const content = document.getElementById('iuranContent');
+    const pg = document.getElementById('iuranPagination');
+
+    // Jika sedang bayar iuran tertentu
+    if (iuranBayarId) { renderIuranBayar(); return; }
+
+    if (!state.iuran || state.iuran.length === 0) {
+        content.innerHTML = '<div class="no-data">Belum ada iuran.<br><small>Buat iuran baru di atas.</small></div>';
+        pg.innerHTML = '';
+        renderIuranForm();
+        return;
+    }
+
+    renderIuranForm();
+
+    const totalItems = state.iuran.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / LIST_PER_PAGE));
+    if (iuranPage > totalPages) iuranPage = totalPages;
+    const start = (iuranPage - 1) * LIST_PER_PAGE;
+    const pageData = state.iuran.slice(start, start + LIST_PER_PAGE);
+
+    let html = '';
+    pageData.forEach(item => {
+        const paid = item.paid ? Object.keys(item.paid).length : 0;
+        const total = state.students.length;
+        const collected = paid * item.nominal;
+        const safeJs = item.id.replace(/'/g, "\\'");
+        html += `<div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h2 style="margin:0;">💰 ${escapeHtml(item.name)}</h2>
+                <button class="btn btn-danger" onclick="removeIuran('${safeJs}')">✕</button>
+            </div>
+            <div style="font-size:0.85rem;color:#555;margin-bottom:4px;">Rp${item.nominal.toLocaleString('id-ID')} / orang &bull; ${formatDisplayDate(item.date)}</div>
+            <div style="font-size:0.85rem;margin-bottom:8px;">
+                <span class="badge badge-paid">${paid} bayar</span> / <span class="badge badge-unpaid">${total - paid} belum</span>
+                &bull; <strong>Rp${collected.toLocaleString('id-ID')}</strong> terkumpul
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="openIuranBayar('${safeJs}')">💳 Bayar</button>
+        </div>`;
+    });
+    content.innerHTML = html;
+
+    pg.innerHTML = `
+        <button class="btn btn-sm btn-outline" onclick="iuranGoPage(-1)" ${iuranPage<=1?'disabled':''}>◀</button>
+        <span class="page-info">Hal ${iuranPage}/${totalPages}</span>
+        <button class="btn btn-sm btn-outline" onclick="iuranGoPage(1)" ${iuranPage>=totalPages?'disabled':''}>▶</button>`;
+}
+
+function renderIuranForm() {
+    const form = document.getElementById('iuranForm');
+    if (!form) return;
+    form.innerHTML = `<div class="card">
+        <h2>➕ Buat Iuran Baru</h2>
+        <div class="input-group">
+            <label>Nama Iuran</label>
+            <input type="text" id="iuranName" placeholder="Contoh: Iuran Agustusan">
+        </div>
+        <div class="inline-flex">
+            <div class="input-group">
+                <label>Nominal per Orang</label>
+                <input type="number" id="iuranNominal" placeholder="10000" min="1000" step="1000">
+            </div>
+            <div class="input-group">
+                <label>Tanggal</label>
+                <input type="date" id="iuranDate">
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="addIuran()">➕ Buat Iuran</button>
+    </div>`;
+}
+
+async function addIuran() {
+    const nameInput = document.getElementById('iuranName');
+    const nominalInput = document.getElementById('iuranNominal');
+    const dateInput = document.getElementById('iuranDate');
+    const name = nameInput.value.trim();
+    const nominal = parseInt(nominalInput.value);
+    const date = dateInput.value;
+
+    if (!name) { toast('Nama iuran harus diisi!', 'error'); return; }
+    if (!nominal || nominal < 1000) { toast('Nominal minimal Rp1.000!', 'error'); return; }
+    if (!date) { toast('Tanggal harus diisi!', 'error'); return; }
+
+    const iuran = { id: genId('iuran'), name, nominal, date, paid: {} };
+
+    // Optimistic update
+    state.iuran.push(iuran);
+    saveLocal();
+    nameInput.value = ''; nominalInput.value = ''; dateInput.value = '';
+    renderIuran();
+    toast(`Iuran "${name}" dibuat`);
+
+    if (GAS_URL) queueSync('addIuran', { id: iuran.id, name, nominal, date });
+}
+
+async function removeIuran(id) {
+    if (!(await confirmAction('Hapus iuran ini?'))) return;
+
+    state.iuran = state.iuran.filter(i => i.id !== id);
+    saveLocal();
+    renderIuran();
+    toast('Iuran dihapus', 'info');
+
+    if (GAS_URL) queueSync('removeIuran', { id });
+}
+
+function openIuranBayar(id) {
+    iuranBayarId = id;
+    renderIuranBayar();
+}
+
+function renderIuranBayar() {
+    const iuran = state.iuran.find(i => i.id === iuranBayarId);
+    if (!iuran) { iuranBayarId = null; renderIuran(); return; }
+
+    const content = document.getElementById('iuranContent');
+    const pg = document.getElementById('iuranPagination');
+    const form = document.getElementById('iuranForm');
+    if (form) form.innerHTML = '';
+
+    const paid = iuran.paid || {};
+    const paidCount = Object.keys(paid).length;
+    const total = state.students.length;
+
+    let html = `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h2 style="margin:0;">💰 ${escapeHtml(iuran.name)} — Rp${iuran.nominal.toLocaleString('id-ID')}</h2>
+            <button class="btn btn-sm btn-outline" onclick="iuranBayarId=null;renderIuran();">◀ Kembali</button>
+        </div>
+        <div class="count-text">${paidCount}/${total} sudah bayar &bull; Rp${(paidCount * iuran.nominal).toLocaleString('id-ID')} terkumpul</div>
+    </div>`;
+
+    html += '<div class="card"><ul class="student-list">';
+    state.students.forEach(name => {
+        const isPaid = paid[name] !== undefined;
+        const safeAttr = escapeHtml(name);
+        const safeJs = name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        html += `<li class="student-item">
+            <label class="day-checkbox" style="flex:1;flex-direction:row;border:none;padding:4px 0;border-radius:0;">
+                <input type="checkbox" ${isPaid ? 'checked' : ''} onchange="toggleIuranBayar('${iuranBayarId}','${safeJs}',this.checked)">
+                <span class="name">${safeAttr}</span>
+                <span style="font-size:0.8rem;color:${isPaid ? '#27ae60' : '#999'};">${isPaid ? '✓ Sudah' : 'Rp' + iuran.nominal.toLocaleString('id-ID')}</span>
+            </label>
+        </li>`;
+    });
+    html += '</ul></div>';
+
+    content.innerHTML = html;
+    pg.innerHTML = '';
+}
+
+async function toggleIuranBayar(iuranId, studentName, checked) {
+    const iuran = state.iuran.find(i => i.id === iuranId);
+    if (!iuran) return;
+    if (!iuran.paid) iuran.paid = {};
+
+    // Optimistic update
+    if (checked) {
+        iuran.paid[studentName] = iuran.nominal;
+    } else {
+        delete iuran.paid[studentName];
+    }
+    saveLocal();
+    renderIuranBayar();
+
+    const paidCount = Object.keys(iuran.paid).length;
+    toast(`${studentName}: ${checked ? '✓ dibayar' : '✗ dibatal'}`);
+
+    if (GAS_URL) queueSync('saveIuranBayar', { iuranId, name: studentName, paid: checked, amount: iuran.nominal });
+}
+
+function iuranGoPage(delta) {
+    iuranPage += delta;
+    renderIuran();
+}
+
+// ===== PENGELUARAN =====
+function renderExpense() {
+    const content = document.getElementById('expenseContent');
+    const pg = document.getElementById('expensePagination');
+
+    if (!state.pengeluaran || state.pengeluaran.length === 0) {
+        content.innerHTML = '<div class="no-data">Belum ada pengeluaran.</div>';
+        pg.innerHTML = '';
+        return;
+    }
+
+    // Sort terbaru di atas
+    const sorted = [...state.pengeluaran].sort((a, b) => b.date.localeCompare(a.date));
+    const totalAll = sorted.reduce((s, e) => s + e.amount, 0);
+
+    const totalItems = sorted.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / LIST_PER_PAGE));
+    if (expensePage > totalPages) expensePage = totalPages;
+    const start = (expensePage - 1) * LIST_PER_PAGE;
+    const pageData = sorted.slice(start, start + LIST_PER_PAGE);
+
+    let html = `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h2 style="margin:0;">📋 Riwayat Pengeluaran</h2>
+            <span style="font-size:0.88rem;font-weight:700;color:#e74c3c;">Total: Rp${totalAll.toLocaleString('id-ID')}</span>
+        </div>
+    </div><div class="card"><ul class="student-list">`;
+
+    pageData.forEach(item => {
+        const safeJs = item.id.replace(/'/g, "\\'");
+        html += `<li class="student-item">
+            <span class="num" style="min-width:auto;">${formatDisplayDate(item.date)}</span>
+            <span class="name" style="font-size:0.85rem;">${escapeHtml(item.note)}</span>
+            <span style="font-weight:700;color:#e74c3c;font-size:0.85rem;white-space:nowrap;">-Rp${item.amount.toLocaleString('id-ID')}</span>
+            <div class="actions" style="margin-left:8px;">
+                <button class="btn btn-danger" onclick="removeExpense('${safeJs}')">✕</button>
+            </div>
+        </li>`;
+    });
+
+    html += '</ul></div>';
+    content.innerHTML = html;
+
+    pg.innerHTML = `
+        <button class="btn btn-sm btn-outline" onclick="expenseGoPage(-1)" ${expensePage<=1?'disabled':''}>◀</button>
+        <span class="page-info">Hal ${expensePage}/${totalPages}</span>
+        <button class="btn btn-sm btn-outline" onclick="expenseGoPage(1)" ${expensePage>=totalPages?'disabled':''}>▶</button>`;
+}
+
+async function addExpense() {
+    const noteInput = document.getElementById('expenseNote');
+    const amountInput = document.getElementById('expenseAmount');
+    const note = noteInput.value.trim();
+    const amount = parseInt(amountInput.value);
+
+    if (!note) { toast('Keterangan harus diisi!', 'error'); return; }
+    if (!amount || amount < 1000) { toast('Jumlah minimal Rp1.000!', 'error'); return; }
+
+    const today = formatDate(new Date());
+    const expense = { id: genId('exp'), date: today, note, amount };
+
+    // Optimistic update
+    state.pengeluaran.push(expense);
+    saveLocal();
+    noteInput.value = ''; amountInput.value = '';
+    renderExpense();
+    toast(`Pengeluaran Rp${amount.toLocaleString('id-ID')} dicatat`);
+
+    if (GAS_URL) queueSync('addExpense', { id: expense.id, date: today, note, amount });
+}
+
+async function removeExpense(id) {
+    if (!(await confirmAction('Hapus pengeluaran ini?'))) return;
+
+    state.pengeluaran = state.pengeluaran.filter(e => e.id !== id);
+    saveLocal();
+    renderExpense();
+    toast('Pengeluaran dihapus', 'info');
+
+    if (GAS_URL) queueSync('removeExpense', { id });
+}
+
+function expenseGoPage(delta) {
+    expensePage += delta;
+    renderExpense();
+}
+
 // ===== INPUT KAS =====
 
 function getAllPaymentDates() {
@@ -587,11 +867,44 @@ function renderRecap() {
         studentRecaps.push({ name, paid, unpaid });
     });
 
+    // Hitung kas harian
+    const kasHarian = totalPaid * 1000; // total yang sudah dibayar
+
+    // Hitung total iuran
+    let totalIuran = 0;
+    if (state.iuran) {
+        state.iuran.forEach(i => {
+            const paidCount = i.paid ? Object.keys(i.paid).length : 0;
+            totalIuran += paidCount * i.nominal;
+        });
+    }
+
+    // Hitung total pengeluaran
+    const totalPengeluaran = (state.pengeluaran || []).reduce((s, e) => s + e.amount, 0);
+
+    // Total masuk & saldo
+    const totalMasuk = kasHarian + totalIuran;
+    const saldo = totalMasuk - totalPengeluaran;
+
     document.getElementById('summaryGrid').innerHTML = `
         <div class="summary-card blue"><div class="num">${students.length}</div><div class="lbl">Total Siswa</div></div>
         <div class="summary-card green"><div class="num">${dates.length}</div><div class="lbl">Hari Wajib Bayar</div></div>
         <div class="summary-card orange"><div class="num">${totalPaid}</div><div class="lbl">Total Bayar</div></div>
         <div class="summary-card red"><div class="num">Rp${totalAmount.toLocaleString('id-ID')}</div><div class="lbl">Total Tunggakan</div></div>`;
+
+    // Ringkasan keuangan
+    const finEl = document.getElementById('financeSummary');
+    if (finEl) {
+        finEl.innerHTML = `<div class="card">
+            <h2>💰 Ringkasan Keuangan</h2>
+            <div class="finance-row"><span>Kas Harian (${totalPaid}x bayar)</span><span class="finance-val green">Rp${kasHarian.toLocaleString('id-ID')}</span></div>
+            <div class="finance-row"><span>Iuran (${(state.iuran||[]).length} jenis)</span><span class="finance-val green">Rp${totalIuran.toLocaleString('id-ID')}</span></div>
+            <div class="finance-row"><span>Total Masuk</span><span class="finance-val green"><strong>Rp${totalMasuk.toLocaleString('id-ID')}</strong></span></div>
+            <div class="finance-row"><span>Pengeluaran (${(state.pengeluaran||[]).length} transaksi)</span><span class="finance-val red">-Rp${totalPengeluaran.toLocaleString('id-ID')}</span></div>
+            <div class="finance-divider"></div>
+            <div class="finance-row"><span><strong>SALDO</strong></span><span class="finance-val ${saldo >= 0 ? 'green' : 'red'}"><strong>Rp${saldo.toLocaleString('id-ID')}</strong></span></div>
+        </div>`;
+    }
 
     const search = (document.getElementById('recapSearch').value || '').toLowerCase();
     const filtered = search ? studentRecaps.filter(r => r.name.toLowerCase().includes(search)) : studentRecaps;

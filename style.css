@@ -204,6 +204,16 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .summary-card.orange { background: #fff3cd; }
 .summary-card.orange .num { color: #856404; }
 
+/* ===== Finance Summary ===== */
+.finance-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; font-size: 0.88rem; color: #555;
+}
+.finance-val { font-weight: 600; white-space: nowrap; }
+.finance-val.green { color: #27ae60; }
+.finance-val.red { color: #e74c3c; }
+.finance-divider { height: 1px; background: #e0e0e0; margin: 4px 0; }
+
 /* ===== Recap Table ===== */
 .recap-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 .recap-table th { background: #1a1a2e; color: white; padding: 10px 10px; text-align: left; font-size: 0.78rem; }
