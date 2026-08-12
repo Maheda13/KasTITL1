@@ -4,9 +4,9 @@
 
 // ===== KONFIGURASI =====
 // Ganti dengan URL Web App GAS setelah deploy
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvdQSGhtj4_sp58CW6rfZhuAzHEHuD_MeJSXCZ2RuVT4vQ3PFNPmM3U_Rgt3ZBskvSwQ/exec';
+const GAS_URL = '';
 
-const START_DATE = new Date('2026-07-27');
+const START_DATE = new Date(2026, 6, 27); // 27 Juli 2026 jam 00:00 WIB (konsisten dengan parseDate)
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const PER_PAGE = 10;
 
@@ -31,25 +31,74 @@ function loadState() {
 
 function saveLocal() { localStorage.setItem('kas_titl1', JSON.stringify(state)); }
 
-// ===== GAS API =====
-async function gasGet(action, params) {
-    if (!GAS_URL) return { success: false, error: 'GAS_URL belum diatur' };
-    const query = new URLSearchParams({ action, ...params });
-    try {
-        const res = await fetch(GAS_URL + '?' + query.toString(), { redirect: 'follow' });
-        return JSON.parse(await res.text());
-    } catch(e) { return { success: false, error: e.toString() }; }
+// ===== BACKGROUND SYNC QUEUE =====
+const syncQueue = [];
+let syncTimer = null;
+
+function queueSync(action, params) {
+    syncQueue.push({ action, params, timestamp: Date.now() });
+    if (!syncTimer) {
+        syncTimer = setTimeout(flushSyncQueue, 1500); // debounce 1.5 detik
+    }
 }
 
-async function loadDataFromGAS() {
+async function flushSyncQueue() {
+    syncTimer = null;
+    if (syncQueue.length === 0 || !GAS_URL) return;
+    const batch = syncQueue.splice(0, syncQueue.length);
+    console.log(`[Sync] Flushing ${batch.length} operations to GAS`);
+    for (const item of batch) {
+        try {
+            await gasGet(item.action, item.params);
+            console.log(`[Sync] ✓ ${item.action}`);
+        } catch(e) {
+            console.error(`[Sync] ✗ ${item.action}:`, e);
+        }
+    }
+    console.log(`[Sync] Batch complete`);
+}
+
+// ===== CACHE TTL =====
+const CACHE_TTL = 5 * 60 * 1000; // 5 menit
+let lastSyncTime = 0;
+
+// ===== GAS API =====
+async function gasGet(action, params, retries = 2) {
+    if (!GAS_URL) return { success: false, error: 'GAS_URL belum diatur' };
+    const query = new URLSearchParams({ action, ...params });
+    for (let i = 0; i <= retries; i++) {
+        try {
+            const res = await fetch(GAS_URL + '?' + query.toString(), {
+                redirect: 'follow',
+                signal: AbortSignal.timeout(15000) // 15 detik timeout
+            });
+            return JSON.parse(await res.text());
+        } catch(e) {
+            if (i === retries) return { success: false, error: e.toString() };
+            await new Promise(r => setTimeout(r, 1000 * (i + 1))); // exponential backoff
+        }
+    }
+}
+
+async function loadDataFromGAS(force = false) {
     if (!GAS_URL) return;
+    const now = Date.now();
+    if (!force && (now - lastSyncTime < CACHE_TTL)) {
+        console.log('[Cache] Using cached data, skip reload');
+        renderStudentList();
+        return;
+    }
+    showLoading('Memuat data...');
     const result = await gasGet('getData', {});
+    hideLoading();
     if (result.success && result.data) {
         state.students = result.data.students || [];
         state.payments = result.data.payments || {};
         state.holidays = result.data.holidays || [];
         if (result.data.settings) state.paymentDays = result.data.settings.paymentDays || [1,2,3,4,5,6];
         saveLocal();
+        lastSyncTime = now;
+        renderStudentList();
     }
 }
 
@@ -98,18 +147,29 @@ function confirmAction(msg, confirmText) {
     });
 }
 
+// ===== LOADING OVERLAY =====
+let _loadingEl = null;
+function showLoading(msg = 'Memproses...') {
+    if (_loadingEl) return;
+    const div = document.createElement('div');
+    div.className = 'loading-overlay';
+    div.innerHTML = '<div class="loading-spinner"></div><div class="loading-text">' + msg + '</div>';
+    document.body.appendChild(div);
+    _loadingEl = div;
+}
+function hideLoading() {
+    if (_loadingEl) { _loadingEl.remove(); _loadingEl = null; }
+}
+
 // ===== NAVIGATION =====
 function navTo(page) {
     closeSidebar();
-    // Update active link
     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
     const links = document.querySelectorAll('.sidebar-link');
     const idx = ['students','input','recap','settings'].indexOf(page);
     if (idx >= 0) links[idx].classList.add('active');
-    // Show page
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page-' + page).classList.add('active');
-    // Render
     if (page === 'students') renderStudentList();
     if (page === 'input') renderInputPage();
     if (page === 'recap') renderRecap();
@@ -131,41 +191,53 @@ async function addStudent() {
     const name = input.value.trim();
     if (!name) return;
     if (state.students.some(s => s.toLowerCase() === name.toLowerCase())) { toast('Nama sudah ada!', 'error'); return; }
+
+    // Optimistic update — langsung ke UI
     btn.disabled = true;
     state.students.push(name);
     saveLocal();
-    if (GAS_URL) await gasGet('addStudent', { name });
     input.value = '';
     input.focus();
     btn.disabled = false;
     renderSettings();
     renderStudentList();
     toast(`${name} ditambahkan`);
+
+    // Background sync ke GAS
+    if (GAS_URL) queueSync('addStudent', { name });
 }
 
 async function addBulkStudents() {
     const ta = document.getElementById('bulkNames');
     const lines = ta.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
     if (lines.length === 0) return;
+
+    // Optimistic update
     let added = 0;
     lines.forEach(name => {
         if (!state.students.some(s => s.toLowerCase() === name.toLowerCase())) { state.students.push(name); added++; }
     });
     saveLocal();
-    if (GAS_URL) await gasGet('addBulkStudents', { names: lines.join('|') });
     ta.value = '';
     renderSettings();
     renderStudentList();
     toast(`${added} siswa ditambahkan`);
+
+    // Background sync
+    if (GAS_URL) queueSync('addBulkStudents', { names: lines.join('|') });
 }
 
 async function removeStudent(name) {
     if (!(await confirmAction(`Hapus "${name}"?`))) return;
+
+    // Optimistic update
     state.students = state.students.filter(s => s !== name);
     saveLocal();
-    if (GAS_URL) await gasGet('removeStudent', { name });
     renderStudentList();
     toast(`${name} dihapus`, 'info');
+
+    // Background sync
+    if (GAS_URL) queueSync('removeStudent', { name });
 }
 
 async function editStudent(oldName) {
@@ -175,6 +247,8 @@ async function editStudent(oldName) {
     if (state.students.some(s => s.toLowerCase() === trimmed.toLowerCase() && s !== oldName)) {
         toast('Nama sudah ada!', 'error'); return;
     }
+
+    // Optimistic update
     const idx = state.students.indexOf(oldName);
     if (idx >= 0) state.students[idx] = trimmed;
     Object.keys(state.payments).forEach(date => {
@@ -184,9 +258,11 @@ async function editStudent(oldName) {
         }
     });
     saveLocal();
-    if (GAS_URL) await gasGet('editStudent', { oldName, newName: trimmed });
     renderStudentList();
     toast(`${oldName} → ${trimmed}`);
+
+    // Background sync
+    if (GAS_URL) queueSync('editStudent', { oldName, newName: trimmed });
 }
 
 function renderStudentList() {
@@ -233,20 +309,27 @@ function renderSettings() {
     const grid = document.getElementById('dayGrid');
     const dayNames = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
     grid.innerHTML = dayNames.map((name, i) =>
-        `<div class="day-btn ${state.paymentDays.includes(i) ? 'active' : ''}"
-            onclick="toggleDay(${i})">${name}</div>`
+        `<label class="day-checkbox">
+            <input type="checkbox" ${state.paymentDays.includes(i) ? 'checked' : ''} onchange="toggleDay(${i}, this.checked)">
+            ${name}
+        </label>`
     ).join('');
     document.getElementById('dayWarning').style.display = state.paymentDays.length === 0 ? 'block' : 'none';
     renderHolidays();
 }
 
-async function toggleDay(day) {
-    const idx = state.paymentDays.indexOf(day);
-    if (idx >= 0) state.paymentDays.splice(idx, 1);
-    else { state.paymentDays.push(day); state.paymentDays.sort(); }
+async function toggleDay(day, checked) {
+    // Optimistic update
+    if (checked) {
+        if (!state.paymentDays.includes(day)) { state.paymentDays.push(day); state.paymentDays.sort(); }
+    } else {
+        state.paymentDays = state.paymentDays.filter(d => d !== day);
+    }
     saveLocal();
-    if (GAS_URL) await gasGet('saveSettings', { paymentDays: state.paymentDays.join(','), startDate: '2026-07-27' });
-    renderSettings();
+    document.getElementById('dayWarning').style.display = state.paymentDays.length === 0 ? 'block' : 'none';
+
+    // Background sync
+    if (GAS_URL) queueSync('saveSettings', { paymentDays: state.paymentDays.join(','), startDate: '2026-07-27' });
 }
 
 async function addHoliday() {
@@ -257,22 +340,30 @@ async function addHoliday() {
     if (!date) { toast('Pilih tanggal!', 'error'); return; }
     if (!state.holidays) state.holidays = [];
     if (state.holidays.some(h => h.date === date)) { toast('Tanggal sudah ada!', 'error'); return; }
+
+    // Optimistic update
     state.holidays.push({ date, note });
     state.holidays.sort((a, b) => a.date.localeCompare(b.date));
     saveLocal();
-    if (GAS_URL) await gasGet('addHoliday', { date, note });
     dateInput.value = ''; noteInput.value = '';
     renderHolidays();
     toast('Tanggal libur ditambahkan');
+
+    // Background sync
+    if (GAS_URL) queueSync('addHoliday', { date, note });
 }
 
 async function removeHoliday(date) {
     if (!(await confirmAction('Hapus tanggal libur ini?'))) return;
+
+    // Optimistic update
     state.holidays = state.holidays.filter(h => h.date !== date);
     saveLocal();
-    if (GAS_URL) await gasGet('removeHoliday', { date });
     renderHolidays();
     toast('Tanggal libur dihapus', 'info');
+
+    // Background sync
+    if (GAS_URL) queueSync('removeHoliday', { date });
 }
 
 function renderHolidays() {
@@ -292,12 +383,17 @@ function renderHolidays() {
 async function resetAll() {
     if (!(await confirmAction('Yakin hapus semua data?', 'Ya, Lanjutkan'))) return;
     if (!(await confirmAction('SEKALI LAGI: HAPUS SEMUA DATA?', 'Ya, Hapus Semua'))) return;
+
+    // Optimistic update
     localStorage.removeItem('kas_titl1');
     state = defaultState(); saveLocal();
-    if (GAS_URL) await gasGet('resetAll', {});
+    lastSyncTime = 0; // reset cache
     navTo('settings');
     renderStudentList();
     toast('Semua data dihapus', 'info');
+
+    // Background sync
+    if (GAS_URL) queueSync('resetAll', {});
 }
 
 // ===== INPUT KAS =====
@@ -442,17 +538,12 @@ async function payStudent(name) {
     // Ambil N tanggal terlama yang belum bayar
     const toPay = unpaidDates.slice(0, daysToPay);
 
-    // Tandai sebagai sudah bayar
+    // Optimistic update — langsung ke UI
     toPay.forEach(date => {
         if (!state.payments[date]) state.payments[date] = {};
         state.payments[date][name] = true;
     });
     saveLocal();
-
-    // Sync ke GAS (batch — satu request untuk semua tanggal)
-    if (GAS_URL && toPay.length > 0) {
-        await gasGet('savePayment', { dates: toPay.join('|'), name, paid: true });
-    }
 
     // Hitung sisa
     const remaining = daysToPay - toPay.length;
@@ -463,6 +554,11 @@ async function payStudent(name) {
 
     toast(msg);
     renderInputPage();
+
+    // Background sync ke GAS
+    if (GAS_URL && toPay.length > 0) {
+        queueSync('savePayment', { dates: toPay.join('|'), name, paid: true });
+    }
 }
 
 // ===== REKAP =====
