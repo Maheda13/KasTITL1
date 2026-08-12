@@ -88,6 +88,29 @@
         .btn-ghost { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
         .btn-ghost:hover { background: rgba(255,255,255,0.25); }
 
+        /* Modal Konfirmasi */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 200; align-items: center; justify-content: center;
+            animation: fadeIn 0.15s;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white; border-radius: 16px; padding: 24px 20px;
+            margin: 16px; max-width: 360px; width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.2s;
+        }
+        .modal-box .modal-icon { font-size: 2.5rem; text-align: center; margin-bottom: 8px; }
+        .modal-box h3 { font-size: 1rem; text-align: center; margin-bottom: 6px; color: #1a1a2e; }
+        .modal-box p { font-size: 0.85rem; text-align: center; color: #666; margin-bottom: 18px; line-height: 1.4; }
+        .modal-box .modal-name { font-weight: 700; color: #e74c3c; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions .btn { flex: 1; text-align: center; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         .inline-flex { display: flex; gap: 8px; align-items: flex-end; }
         .inline-flex .input-group { flex: 1; margin-bottom: 0; }
 
@@ -248,6 +271,7 @@
                     <h2 style="margin:0;">👥 Daftar Siswa (<span id="studentCount">0</span>)</h2>
                 </div>
                 <ul class="student-list" id="studentList"></ul>
+                <div class="pagination" id="studentPagination"></div>
             </div>
         </div>
 
@@ -321,8 +345,10 @@
                     <div class="bulk-actions">
                         <button class="btn btn-sm btn-outline" onclick="checkAll()">✅ Pilih Semua</button>
                         <button class="btn btn-sm btn-outline" onclick="uncheckAll()">⬜ Hapus Centang</button>
+                        <button class="btn btn-sm btn-outline" id="btnHidePaid" onclick="toggleHidePaid()" style="border-color:#4fc3f7;color:#0288d1;">👁 Sembunyikan sudah bayar</button>
                     </div>
                     <div id="payContent"></div>
+                    <div class="pagination" id="payPagination"></div>
                 </div>
 
                 <!-- MODE PER SISWA -->
@@ -376,9 +402,9 @@
     // KONFIGURASI
     // =============================================
     // Ganti dengan URL Web App GAS setelah deploy
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwdaX2Ag-eLS0_AAsTPIVrbbGDGFbXnfmbgizEXqz5GhzdprdqPl6uL6K85yA1v0liGjw/exec';
+    const GAS_URL = '';
 
-    const START_DATE = new Date('2026-07-26');
+    const START_DATE = new Date('2026-07-27');
     const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     const PER_PAGE = 10;
@@ -390,6 +416,10 @@
     let currentDate = getToday();
     let payMode = 'harian';
     let recapPage = 1;
+    let hidePaid = true; // default: sembunyikan yang sudah bayar
+    let studentPage = 1;
+    let payPage = 1;
+    const LIST_PER_PAGE = 15; // untuk daftar siswa dan centang bayar
 
     function defaultState() {
         return { students: [], paymentDays: [1,2,3,4,5,6], payments: {}, holidays: [] };
@@ -558,12 +588,21 @@
         const list = document.getElementById('studentList');
         if (state.students.length === 0) {
             list.innerHTML = '<div class="no-data">Belum ada siswa. Tambahkan di ⚙️ Pengaturan.</div>';
+            document.getElementById('studentPagination').innerHTML = '';
             return;
         }
-        list.innerHTML = state.students.map((name, i) => {
+
+        // Pagination
+        const total = state.students.length;
+        const totalPages = Math.max(1, Math.ceil(total / LIST_PER_PAGE));
+        if (studentPage > totalPages) studentPage = totalPages;
+        const start = (studentPage - 1) * LIST_PER_PAGE;
+        const pageData = state.students.slice(start, start + LIST_PER_PAGE);
+
+        list.innerHTML = pageData.map((name, i) => {
             const safe = name.replace(/'/g, "\\'");
             return `<li class="student-item">
-                <span class="num">${i+1}.</span>
+                <span class="num">${start + i + 1}.</span>
                 <span class="name">${name}</span>
                 <div class="actions">
                     <button class="btn btn-sm btn-outline" onclick="editStudent('${safe}')">✏️</button>
@@ -571,6 +610,16 @@
                 </div>
             </li>`;
         }).join('');
+
+        document.getElementById('studentPagination').innerHTML = `
+            <button class="btn btn-sm btn-outline" onclick="studentGoPage(-1)" ${studentPage<=1?'disabled':''}>◀</button>
+            <span class="page-info">Hal ${studentPage}/${totalPages}</span>
+            <button class="btn btn-sm btn-outline" onclick="studentGoPage(1)" ${studentPage>=totalPages?'disabled':''}>▶</button>`;
+    }
+
+    function studentGoPage(delta) {
+        studentPage += delta;
+        renderStudentList();
     }
 
     // =============================================
@@ -661,10 +710,11 @@
         const d = parseDate(currentDate);
         d.setDate(d.getDate() + delta);
         currentDate = formatDate(d);
+        payPage = 1;
         renderInputPage();
     }
 
-    function pickDate(val) { currentDate = val; renderInputPage(); }
+    function pickDate(val) { currentDate = val; payPage = 1; renderInputPage(); }
 
     function renderInputPage() {
         const d = parseDate(currentDate);
@@ -675,22 +725,114 @@
         if (holidayNote) statusText = `🏖️ Libur — ${holidayNote}`;
         document.getElementById('dateDisplay').innerHTML = `${dayName}, ${formatDisplayDate(currentDate)}<small>${statusText}</small>`;
 
+        // Update tombol hidePaid
+        const btn = document.getElementById('btnHidePaid');
+        if (hidePaid) {
+            btn.textContent = '👁 Tampilkan semua';
+            btn.style.background = '#e3f2fd';
+        } else {
+            btn.textContent = '👁 Sembunyikan sudah bayar';
+            btn.style.background = '';
+        }
+
         const content = document.getElementById('payContent');
-        if (state.students.length === 0) { content.innerHTML = '<div class="no-data">Belum ada siswa.</div>'; return; }
-        if (!isPaymentDay(currentDate)) { content.innerHTML = '<div class="warning-box">📅 Bukan hari wajib bayar.</div>'; return; }
+        const pg = document.getElementById('payPagination');
+        if (state.students.length === 0) { content.innerHTML = '<div class="no-data">Belum ada siswa.</div>'; pg.innerHTML = ''; return; }
+        if (!isPaymentDay(currentDate)) { content.innerHTML = '<div class="warning-box">📅 Bukan hari wajib bayar.</div>'; pg.innerHTML = ''; return; }
         if (!state.payments[currentDate]) state.payments[currentDate] = {};
 
-        let html = `<table class="pay-table">
+        // Filter: sembunyikan siswa yang sudah bayar jika hidePaid aktif
+        let visibleStudents = state.students.map((name, i) => ({ name, i }));
+        if (hidePaid) {
+            visibleStudents = visibleStudents.filter(s => state.payments[currentDate][s.name] !== true);
+        }
+
+        if (visibleStudents.length === 0) {
+            const total = state.students.length;
+            content.innerHTML = `<div class="no-data" style="color:#27ae60;">✅ Semua ${total} siswa sudah bayar hari ini!</div>`;
+            pg.innerHTML = '';
+            return;
+        }
+
+        // Pagination
+        const totalItems = visibleStudents.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / LIST_PER_PAGE));
+        if (payPage > totalPages) payPage = totalPages;
+        const start = (payPage - 1) * LIST_PER_PAGE;
+        const pageData = visibleStudents.slice(start, start + LIST_PER_PAGE);
+
+        const hiddenCount = state.students.length - visibleStudents.length;
+        let html = '';
+        if (hidePaid && hiddenCount > 0) {
+            html += `<div style="font-size:0.8rem;color:#888;margin-bottom:8px;">📋 ${totalItems} dari ${state.students.length} siswa ditampilkan (${hiddenCount} sudah bayar, disembunyikan)</div>`;
+        } else {
+            html += `<div style="font-size:0.8rem;color:#888;margin-bottom:8px;">📋 ${totalItems} siswa</div>`;
+        }
+        html += `<table class="pay-table">
             <thead><tr><th style="width:36px;">No</th><th>Nama</th><th style="width:80px;text-align:center;">Bayar</th></tr></thead><tbody>`;
-        state.students.forEach((name, i) => {
-            const paid = state.payments[currentDate][name] === true;
-            const safe = name.replace(/'/g, "\\'");
-            html += `<tr><td>${i+1}</td><td>${name}</td><td style="text-align:center;">
+        pageData.forEach((s, idx) => {
+            const paid = state.payments[currentDate][s.name] === true;
+            const safe = s.name.replace(/'/g, "\\'");
+            html += `<tr><td>${start + idx + 1}</td><td>${s.name}</td><td style="text-align:center;">
                 <input type="checkbox" class="pay-check" ${paid?'checked':''}
-                    onchange="togglePayment('${currentDate}','${safe}',this.checked)"></td></tr>`;
+                    onchange="handleCheck(this,'${currentDate}','${safe}')"></td></tr>`;
         });
         html += '</tbody></table>';
         content.innerHTML = html;
+
+        pg.innerHTML = `
+            <button class="btn btn-sm btn-outline" onclick="payGoPage(-1)" ${payPage<=1?'disabled':''}>◀</button>
+            <span class="page-info">Hal ${payPage}/${totalPages}</span>
+            <button class="btn btn-sm btn-outline" onclick="payGoPage(1)" ${payPage>=totalPages?'disabled':''}>▶</button>`;
+    }
+
+    function toggleHidePaid() {
+        hidePaid = !hidePaid;
+        payPage = 1; // reset ke halaman 1
+        renderInputPage();
+    }
+
+    function payGoPage(delta) {
+        payPage += delta;
+        renderInputPage();
+    }
+
+    // === Confirmation flow for unchecking paid students ===
+    let _pendingCheck = null; // { el, date, name }
+
+    function handleCheck(el, date, name) {
+        const checking = el.checked;
+        if (checking) {
+            // Centang baru → langsung simpan
+            togglePayment(date, name, true);
+        } else {
+            // Menghapus centang — cek apakah sudah ditandai bayar sebelumnya
+            const wasPaid = state.payments[date] && state.payments[date][name] === true;
+            if (wasPaid) {
+                // Tampilkan modal konfirmasi, kembalikan checkbox dulu
+                el.checked = true;
+                _pendingCheck = { el, date, name };
+                document.getElementById('modalStudentName').textContent = name;
+                document.getElementById('uncheckModal').classList.add('show');
+            } else {
+                // Centang baru belum disimpan → batalkan saja
+                togglePayment(date, name, false);
+            }
+        }
+    }
+
+    function confirmUncheck() {
+        if (!_pendingCheck) return;
+        const { date, name } = _pendingCheck;
+        _pendingCheck = null;
+        document.getElementById('uncheckModal').classList.remove('show');
+        togglePayment(date, name, false);
+    }
+
+    function cancelUncheck() {
+        _pendingCheck = null;
+        document.getElementById('uncheckModal').classList.remove('show');
+        // Checkbox sudah dikembalikan ke checked di handleCheck
     }
 
     async function togglePayment(date, name, checked) {
@@ -711,6 +853,8 @@
 
     function uncheckAll() {
         if (!state.payments[currentDate]) return;
+        const paidStudents = state.students.filter(n => state.payments[currentDate][n] === true);
+        if (paidStudents.length > 0 && !confirm(`⚠️ Ada ${paidStudents.length} siswa yang sudah ditandai bayar.\nHapus semua centang?`)) return;
         state.students.forEach(name => { state.payments[currentDate][name] = false; });
         saveLocal();
         savePaymentsToGAS(currentDate);
@@ -932,5 +1076,18 @@
     renderStudentList();
     if (GAS_URL) loadDataFromGAS();
     </script>
+
+    <!-- Modal Konfirmasi Hapus Centang -->
+    <div class="modal-overlay" id="uncheckModal">
+        <div class="modal-box">
+            <div class="modal-icon">⚠️</div>
+            <h3>Batalkan Pembayaran?</h3>
+            <p>Siswa <span class="modal-name" id="modalStudentName"></span> sudah ditandai <b>sudah bayar</b> untuk tanggal ini. Centang akan dihapus dan status berubah menjadi <b>belum bayar</b>.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="cancelUncheck()">Batal</button>
+                <button class="btn btn-danger" onclick="confirmUncheck()" style="flex:1;text-align:center;">Hapus Centang</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
