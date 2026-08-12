@@ -4,7 +4,7 @@
 
 // ===== KONFIGURASI =====
 // Ganti dengan URL Web App GAS setelah deploy
-const GAS_URL = '';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvdQSGhtj4_sp58CW6rfZhuAzHEHuD_MeJSXCZ2RuVT4vQ3PFNPmM3U_Rgt3ZBskvSwQ/exec';
 
 const START_DATE = new Date(2026, 6, 27); // 27 Juli 2026 jam 00:00 WIB (konsisten dengan parseDate)
 const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
