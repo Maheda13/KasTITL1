@@ -16,23 +16,20 @@
             min-height: 100vh; min-height: 100dvh;
             -webkit-tap-highlight-color: transparent;
         }
-
         header {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white; padding: 14px 16px; text-align: center;
+            color: white; padding: 14px 16px;
             position: sticky; top: 0; z-index: 100;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: space-between;
         }
         header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 1px; }
-        .header-row { display: flex; align-items: center; justify-content: space-between; }
-
-        .sync-badge {
-            font-size: 0.7rem; padding: 4px 10px; border-radius: 20px;
-            font-weight: 600; cursor: pointer; transition: all 0.3s;
+        .gear-btn {
+            background: none; border: none; color: white; font-size: 1.4rem;
+            cursor: pointer; padding: 6px; border-radius: 8px; transition: background 0.2s;
         }
-        .sync-badge.connected { background: rgba(39,174,96,0.3); color: #6fdb9e; }
-        .sync-badge.no-url { background: rgba(241,196,15,0.3); color: #f5d76e; }
-        .sync-badge.error { background: rgba(231,76,60,0.3); color: #f5a8a1; }
+        .gear-btn:hover { background: rgba(255,255,255,0.15); }
+        .gear-btn.active { background: rgba(79,195,247,0.3); }
 
         .tabs {
             display: flex; background: #16213e;
@@ -62,13 +59,13 @@
             display: flex; align-items: center; gap: 8px;
         }
 
-        input[type="text"], input[type="date"], textarea {
+        input[type="text"], input[type="date"], input[type="number"], textarea {
             width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0;
             border-radius: 8px; font-size: 0.95rem; transition: border-color 0.2s;
             outline: none; font-family: inherit; -webkit-appearance: none;
         }
-        input[type="text"]:focus, textarea:focus { border-color: #4fc3f7; }
-        textarea { resize: vertical; min-height: 100px; }
+        input[type="text"]:focus, textarea:focus, input[type="number"]:focus { border-color: #4fc3f7; }
+        textarea { resize: vertical; min-height: 80px; }
 
         label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margin-bottom: 6px; }
         .input-group { margin-bottom: 12px; }
@@ -87,13 +84,14 @@
         .btn-danger:hover { background: #c0392b; }
         .btn-outline { background: transparent; color: #1a1a2e; border: 2px solid #e0e0e0; }
         .btn-outline:hover { border-color: #1a1a2e; }
-        .btn-export { background: #0f3460; color: white; font-size: 0.85rem; padding: 8px 16px; }
-        .btn-export:hover { background: #1a1a2e; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+        .btn-ghost { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.25); }
 
         .inline-flex { display: flex; gap: 8px; align-items: flex-end; }
         .inline-flex .input-group { flex: 1; margin-bottom: 0; }
 
-        .student-list { list-style: none; max-height: 400px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .student-list { list-style: none; }
         .student-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem;
@@ -101,6 +99,7 @@
         .student-item:last-child { border-bottom: none; }
         .student-item .num { color: #999; font-size: 0.8rem; margin-right: 10px; min-width: 24px; }
         .student-item .name { flex: 1; }
+        .student-item .actions { display: flex; gap: 4px; }
 
         .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
         .day-btn {
@@ -153,7 +152,7 @@
             background: #fff3cd; border: 1px solid #ffc107; padding: 10px 14px;
             border-radius: 8px; font-size: 0.82rem; color: #856404; margin-bottom: 14px;
         }
-        .no-students { text-align: center; padding: 24px; color: #999; font-size: 0.88rem; }
+        .no-data { text-align: center; padding: 24px; color: #999; font-size: 0.88rem; }
 
         .export-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
         .month-filter { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
@@ -161,6 +160,29 @@
             padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px;
             font-size: 0.85rem; font-family: inherit; background: white; outline: none;
         }
+
+        .mode-toggle {
+            display: flex; background: #e8ecf0; border-radius: 10px; padding: 3px; margin-bottom: 14px;
+        }
+        .mode-btn {
+            flex: 1; padding: 8px 12px; text-align: center; border: none; border-radius: 8px;
+            font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            background: transparent; color: #666; font-family: inherit;
+        }
+        .mode-btn.active { background: white; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        .bulk-actions { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+
+        .search-box {
+            width: 100%; padding: 8px 12px 8px 34px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 0.88rem; outline: none; font-family: inherit;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/%3E%3C/svg%3E") no-repeat 10px center;
+        }
+        .search-box:focus { border-color: #4fc3f7; }
+
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 14px; }
+        .pagination .btn { padding: 6px 14px; font-size: 0.82rem; }
+        .pagination .page-info { font-size: 0.82rem; color: #666; }
 
         .install-banner {
             background: linear-gradient(135deg, #0f3460, #1a1a2e); color: white;
@@ -183,9 +205,7 @@
         .loading-spinner .dots::after {
             content: ''; animation: dots 1.5s steps(4,end) infinite;
         }
-        @keyframes dots {
-            0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; }
-        }
+        @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
 
         @media (max-width: 480px) {
             .day-grid { grid-template-columns: repeat(4, 1fr); }
@@ -196,18 +216,13 @@
 </head>
 <body>
     <header>
-        <div class="header-row">
-            <h1 style="flex:1;">📋 KAS TITL 1</h1>
-            <span class="sync-badge no-url" id="syncBadge" onclick="syncNow()" title="Klik untuk sync">⏳ Set GAS URL</span>
-        </div>
+        <h1>📋 KAS TITL 1</h1>
+        <button class="gear-btn" id="gearBtn" onclick="toggleSettings()" title="Pengaturan">⚙️</button>
     </header>
 
-    <nav class="tabs">
+    <nav class="tabs" id="mainTabs">
         <div class="tab active" onclick="showPage('students')">
             <span class="tab-icon">👥</span>Siswa
-        </div>
-        <div class="tab" onclick="showPage('settings')">
-            <span class="tab-icon">⚙️</span>Pengaturan
         </div>
         <div class="tab" onclick="showPage('input')">
             <span class="tab-icon">💰</span>Input Kas
@@ -218,7 +233,6 @@
     </nav>
 
     <main>
-        <!-- INSTALL BANNER -->
         <div class="install-banner" id="installBanner">
             <span>📲 Install aplikasi ini ke HP?</span>
             <div style="display:flex;gap:6px;align-items:center;">
@@ -230,6 +244,16 @@
         <!-- SISWA -->
         <div id="page-students" class="page active">
             <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h2 style="margin:0;">👥 Daftar Siswa (<span id="studentCount">0</span>)</h2>
+                </div>
+                <ul class="student-list" id="studentList"></ul>
+            </div>
+        </div>
+
+        <!-- PENGATURAN (toggle via gear icon) -->
+        <div id="page-settings" class="page">
+            <div class="card">
                 <h2>➕ Tambah Siswa</h2>
                 <div class="input-group">
                     <label>Nama Siswa</label>
@@ -238,35 +262,23 @@
                         <button class="btn btn-primary" onclick="addStudent()">Tambah</button>
                     </div>
                 </div>
-            </div>
-            <div class="card">
-                <h2>📋 Input Banyak Sekaligus</h2>
                 <div class="input-group">
-                    <label>Satu nama per baris</label>
-                    <textarea id="bulkNames" placeholder="Ahmad&#10;Budi&#10;Citra&#10;Diana"></textarea>
+                    <label>Input Banyak (satu nama per baris)</label>
+                    <textarea id="bulkNames" placeholder="Ahmad&#10;Budi&#10;Citra"></textarea>
                 </div>
                 <button class="btn btn-success" onclick="addBulkStudents()">Tambah Semua</button>
             </div>
-            <div class="card">
-                <h2>👥 Daftar Siswa (<span id="studentCount">0</span>)</h2>
-                <ul class="student-list" id="studentList"></ul>
-            </div>
-        </div>
 
-        <!-- PENGATURAN -->
-        <div id="page-settings" class="page">
             <div class="card">
                 <h2>📅 Hari Wajib Bayar</h2>
-                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Pilih hari apa saja siswa wajib membayar kas Rp1.000. Mulai dari 27 Juli 2026.</p>
+                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Pilih hari apa saja siswa wajib membayar kas Rp1.000.</p>
                 <div class="day-grid" id="dayGrid"></div>
-                <div class="warning-box" id="dayWarning" style="display:none;">
-                    ⚠️ Belum ada hari yang dipilih! Siswa tidak akan diminta bayar.
-                </div>
+                <div class="warning-box" id="dayWarning" style="display:none;">⚠️ Belum ada hari yang dipilih!</div>
             </div>
 
             <div class="card">
                 <h2>🏖️ Tanggal Libur</h2>
-                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Tanggal yang ditandai libur tidak akan diminta bayar kas (tanggal merah, libur sekolah, dll).</p>
+                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Tanggal yang ditandai libur tidak akan diminta bayar kas.</p>
                 <div class="inline-flex" style="margin-bottom:12px;">
                     <div class="input-group">
                         <label>Tanggal</label>
@@ -283,7 +295,7 @@
 
             <div class="card">
                 <h2>🗑️ Hapus Semua Data</h2>
-                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Hapus semua data siswa, pembayaran, dan libur dari Spreadsheet.</p>
+                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Hapus semua data dari Spreadsheet.</p>
                 <button class="btn btn-danger" style="padding:10px 20px; font-size:0.9rem;" onclick="resetAll()">Hapus Semua Data</button>
             </div>
         </div>
@@ -291,19 +303,45 @@
         <!-- INPUT KAS -->
         <div id="page-input" class="page">
             <div class="card">
-                <h2>📅 Pilih Tanggal</h2>
-                <div class="date-nav">
-                    <button class="btn btn-outline" onclick="changeDate(-1)">◀</button>
-                    <div class="date-display" id="dateDisplay"></div>
-                    <button class="btn btn-outline" onclick="changeDate(1)">▶</button>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="modeHarian" onclick="setPayMode('harian')">📅 Harian</button>
+                    <button class="mode-btn" id="modeSiswa" onclick="setPayMode('siswa')">👤 Per Siswa</button>
                 </div>
-                <div style="text-align:center; margin-bottom:10px;">
-                    <input type="date" id="datePicker" style="width:auto;" onchange="pickDate(this.value)">
+
+                <!-- MODE HARIAN -->
+                <div id="payModeHarian">
+                    <div class="date-nav">
+                        <button class="btn btn-outline btn-sm" onclick="changeDate(-1)">◀</button>
+                        <div class="date-display" id="dateDisplay"></div>
+                        <button class="btn btn-outline btn-sm" onclick="changeDate(1)">▶</button>
+                    </div>
+                    <div style="text-align:center; margin-bottom:10px;">
+                        <input type="date" id="datePicker" style="width:auto;" onchange="pickDate(this.value)">
+                    </div>
+                    <div class="bulk-actions">
+                        <button class="btn btn-sm btn-outline" onclick="checkAll()">✅ Pilih Semua</button>
+                        <button class="btn btn-sm btn-outline" onclick="uncheckAll()">⬜ Hapus Centang</button>
+                    </div>
+                    <div id="payContent"></div>
                 </div>
-            </div>
-            <div class="card" id="payCard">
-                <h2>💵 Pembayaran</h2>
-                <div id="payContent"></div>
+
+                <!-- MODE PER SISWA -->
+                <div id="payModeSiswa" style="display:none;">
+                    <div class="input-group">
+                        <label>Pilih Siswa</label>
+                        <select id="payStudentSelect" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:0.95rem;font-family:inherit;background:white;">
+                            <option value="">— Pilih Nama —</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Nominal Bayar (Rp)</label>
+                        <input type="number" id="payAmount" placeholder="Misal: 5000" min="1000" step="1000"
+                            onkeydown="if(event.key==='Enter')processPerStudentPay()">
+                    </div>
+                    <p style="font-size:0.78rem; color:#888; margin-bottom:10px;">Rp1.000 = 1 hari. Rp5.000 = 5 hari berturut-turut (dari tanggal terlama yang belum bayar).</p>
+                    <button class="btn btn-success" onclick="processPerStudentPay()">💾 Simpan Pembayaran</button>
+                    <div id="perStudentResult" style="margin-top:12px;"></div>
+                </div>
             </div>
         </div>
 
@@ -312,44 +350,46 @@
             <div class="card">
                 <h2>📊 Ringkasan</h2>
                 <div class="month-filter">
-                    <label style="margin:0;">Filter Bulan:</label>
+                    <label style="margin:0;">Filter:</label>
                     <select id="recapMonth" onchange="renderRecap()"></select>
                 </div>
                 <div class="summary-grid" id="summaryGrid"></div>
                 <div class="export-row">
-                    <button class="btn btn-export" onclick="exportCSV()">📥 Download CSV</button>
-                    <button class="btn btn-export" onclick="exportExcel()">📥 Download Excel</button>
+                    <button class="btn btn-sm btn-primary" onclick="exportCSV()">📥 CSV</button>
+                    <button class="btn btn-sm btn-primary" onclick="exportExcel()">📥 Excel</button>
                 </div>
             </div>
             <div class="card">
-                <h2>📋 Rekap Per Siswa</h2>
-                <div style="overflow-x:auto;">
+                <input type="text" class="search-box" id="recapSearch" placeholder="Cari nama siswa..." oninput="renderRecap()">
+                <div style="overflow-x:auto; margin-top:10px;">
                     <table class="recap-table" id="recapTable"></table>
                 </div>
+                <div class="pagination" id="recapPagination"></div>
             </div>
         </div>
     </main>
 
-    <!-- SheetJS for Excel export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
     <script>
     // =============================================
-    // CONSTANTS
+    // KONFIGURASI
     // =============================================
-    // Ganti URL ini dengan URL Web App GAS kamu setelah deploy
-    // Contoh: 'https://script.google.com/macros/s/AKfyc.../exec'
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxN8VjdTUsYzYu3Ths9L18XrUGOvqAisZlKei-RV4aULXn5uYyOabPm__T_2oTNe96_Qw/exec';
+    // Ganti dengan URL Web App GAS setelah deploy
+    const GAS_URL = '';
 
-    const START_DATE = new Date('2026-07-26');
+    const START_DATE = new Date('2026-07-27');
     const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const PER_PAGE = 10;
 
     // =============================================
-    // STATE (localStorage)
+    // STATE
     // =============================================
     let state = loadState();
     let currentDate = getToday();
+    let payMode = 'harian';
+    let recapPage = 1;
 
     function defaultState() {
         return { students: [], paymentDays: [1,2,3,4,5,6], payments: {}, holidays: [] };
@@ -358,94 +398,51 @@
     function loadState() {
         try {
             const s = JSON.parse(localStorage.getItem('kas_titl1'));
-            if (s && s.students) {
-                if (!s.holidays) s.holidays = [];
-                return s;
-            }
+            if (s && s.students) { if (!s.holidays) s.holidays = []; return s; }
         } catch(e) {}
         return defaultState();
     }
 
-    function saveLocal() {
-        localStorage.setItem('kas_titl1', JSON.stringify(state));
-    }
+    function saveLocal() { localStorage.setItem('kas_titl1', JSON.stringify(state)); }
 
     // =============================================
-    // GAS API — Semua operasi pakai GET
+    // GAS API
     // =============================================
-    function setSyncBadge(status) {
-        const el = document.getElementById('syncBadge');
-        el.className = 'sync-badge ' + status;
-        if (status === 'connected') el.innerHTML = '☁️ Connected';
-        else if (status === 'no-url') el.innerHTML = '⏳ Set GAS URL';
-        else el.innerHTML = '❌ Error';
-    }
-
     async function gasGet(action, params) {
         if (!GAS_URL) return { success: false, error: 'GAS_URL belum diatur' };
-
         const query = new URLSearchParams({ action, ...params });
         try {
             const res = await fetch(GAS_URL + '?' + query.toString(), { redirect: 'follow' });
-            const text = await res.text();
-            return JSON.parse(text);
-        } catch(e) {
-            return { success: false, error: e.toString() };
-        }
+            return JSON.parse(await res.text());
+        } catch(e) { return { success: false, error: e.toString() }; }
     }
 
     async function loadDataFromGAS() {
-        if (!GAS_URL) { setSyncBadge('no-url'); return; }
+        if (!GAS_URL) return;
         const result = await gasGet('getData', {});
         if (result.success && result.data) {
             state.students = result.data.students || [];
             state.payments = result.data.payments || {};
             state.holidays = result.data.holidays || [];
-            if (result.data.settings) {
-                state.paymentDays = result.data.settings.paymentDays || [1,2,3,4,5,6];
-            }
+            if (result.data.settings) state.paymentDays = result.data.settings.paymentDays || [1,2,3,4,5,6];
             saveLocal();
-            setSyncBadge('connected');
-        } else {
-            setSyncBadge('error');
         }
-    }
-
-    async function syncNow() {
-        if (!GAS_URL) { alert('GAS_URL belum diatur di kode!'); return; }
-        showLoading();
-        await loadDataFromGAS();
-        hideLoading();
-        const active = document.querySelector('.page.active');
-        if (active) showPage(active.id.replace('page-', ''));
     }
 
     function showLoading() {
         const div = document.createElement('div');
-        div.id = 'loadingOverlay';
-        div.className = 'loading-overlay';
+        div.id = 'loadingOverlay'; div.className = 'loading-overlay';
         div.innerHTML = '<div class="loading-spinner">Menyimpan<span class="dots"></span></div>';
         document.body.appendChild(div);
     }
-
-    function hideLoading() {
-        const el = document.getElementById('loadingOverlay');
-        if (el) el.remove();
-    }
+    function hideLoading() { const el = document.getElementById('loadingOverlay'); if (el) el.remove(); }
 
     // =============================================
     // UTILITY
     // =============================================
     function getToday() { return formatDate(new Date()); }
-
-    function formatDate(d) {
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-
-    function parseDate(s) {
-        const [y,m,d] = s.split('-').map(Number);
-        return new Date(y, m-1, d);
-    }
+    function formatDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function parseDate(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
 
     function isPaymentDay(dateStr) {
         const d = parseDate(dateStr);
@@ -467,91 +464,31 @@
     }
 
     // =============================================
-    // TAB NAVIGATION
+    // NAVIGATION
     // =============================================
+    let settingsOpen = false;
+
     function showPage(page) {
+        settingsOpen = false;
+        document.getElementById('gearBtn').classList.remove('active');
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.getElementById('page-' + page).classList.add('active');
-        const idx = ['students','settings','input','recap'].indexOf(page);
-        if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
-        if (page === 'input') renderInputPage();
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const tabs = document.querySelectorAll('.tab');
+        const idx = ['students','input','recap'].indexOf(page);
+        if (idx >= 0) tabs[idx].classList.add('active');
         if (page === 'students') renderStudentList();
-        if (page === 'settings') renderSettings();
+        if (page === 'input') renderInputPage();
         if (page === 'recap') renderRecap();
     }
 
-    // =============================================
-    // INPUT KAS
-    // =============================================
-    function changeDate(delta) {
-        const d = parseDate(currentDate);
-        d.setDate(d.getDate() + delta);
-        currentDate = formatDate(d);
-        renderInputPage();
-    }
-
-    function pickDate(val) {
-        currentDate = val;
-        renderInputPage();
-    }
-
-    function renderInputPage() {
-        const d = parseDate(currentDate);
-        const dayName = DAYS_ID[d.getDay()];
-
-        document.getElementById('datePicker').value = currentDate;
-        const holidayNote = getHolidayNote(currentDate);
-        let statusText = isPaymentDay(currentDate) ? '✅ Hari wajib bayar' : '⬜ Bukan hari wajib bayar';
-        if (holidayNote) statusText = `🏖️ Libur — ${holidayNote}`;
-        document.getElementById('dateDisplay').innerHTML =
-            `${dayName}, ${formatDisplayDate(currentDate)}<small>${statusText}</small>`;
-
-        const content = document.getElementById('payContent');
-
-        if (state.students.length === 0) {
-            content.innerHTML = '<div class="no-students">Belum ada siswa. Tambahkan di tab "Siswa".</div>';
-            return;
-        }
-
-        if (!isPaymentDay(currentDate)) {
-            content.innerHTML = '<div class="warning-box">📅 Hari ini bukan hari wajib bayar. Tidak ada yang perlu dibayar.</div>';
-            return;
-        }
-
-        if (!state.payments[currentDate]) state.payments[currentDate] = {};
-
-        let html = `<table class="pay-table">
-            <thead><tr>
-                <th style="width:36px;">No</th>
-                <th>Nama</th>
-                <th style="width:80px;text-align:center;">Bayar</th>
-            </tr></thead><tbody>`;
-
-        state.students.forEach((name, i) => {
-            const paid = state.payments[currentDate][name] === true;
-            const safeName = name.replace(/'/g, "\\'");
-            html += `<tr>
-                <td>${i+1}</td>
-                <td>${name}</td>
-                <td style="text-align:center;">
-                    <input type="checkbox" class="pay-check" ${paid ? 'checked' : ''}
-                        onchange="togglePayment('${currentDate}','${safeName}', this.checked)">
-                </td>
-            </tr>`;
-        });
-
-        html += '</tbody></table>';
-        content.innerHTML = html;
-    }
-
-    async function togglePayment(date, name, checked) {
-        if (!state.payments[date]) state.payments[date] = {};
-        state.payments[date][name] = checked;
-        saveLocal();
-        if (GAS_URL) {
-            await gasGet('savePayment', { date, name, paid: checked });
-        }
+    function toggleSettings() {
+        settingsOpen = !settingsOpen;
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('page-settings').classList.add('active');
+        document.getElementById('gearBtn').classList.toggle('active', settingsOpen);
+        renderSettings();
     }
 
     // =============================================
@@ -561,17 +498,13 @@
         const input = document.getElementById('studentName');
         const name = input.value.trim();
         if (!name) return;
-        if (state.students.some(s => s.toLowerCase() === name.toLowerCase())) {
-            alert('Nama sudah ada!');
-            return;
-        }
+        if (state.students.some(s => s.toLowerCase() === name.toLowerCase())) { alert('Nama sudah ada!'); return; }
         state.students.push(name);
         saveLocal();
-        if (GAS_URL) {
-            await gasGet('addStudent', { name });
-        }
+        if (GAS_URL) await gasGet('addStudent', { name });
         input.value = '';
         input.focus();
+        renderSettings();
         renderStudentList();
     }
 
@@ -579,20 +512,15 @@
         const ta = document.getElementById('bulkNames');
         const lines = ta.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
         if (lines.length === 0) return;
-
         let added = 0;
         lines.forEach(name => {
-            if (!state.students.some(s => s.toLowerCase() === name.toLowerCase())) {
-                state.students.push(name);
-                added++;
-            }
+            if (!state.students.some(s => s.toLowerCase() === name.toLowerCase())) { state.students.push(name); added++; }
         });
         saveLocal();
-        if (GAS_URL) {
-            await gasGet('addBulkStudents', { names: lines.join('|') });
-        }
+        if (GAS_URL) await gasGet('addBulkStudents', { names: lines.join('|') });
         ta.value = '';
         alert(`${added} siswa ditambahkan!`);
+        renderSettings();
         renderStudentList();
     }
 
@@ -600,9 +528,28 @@
         if (!confirm(`Hapus "${name}"?`)) return;
         state.students = state.students.filter(s => s !== name);
         saveLocal();
-        if (GAS_URL) {
-            await gasGet('removeStudent', { name });
+        if (GAS_URL) await gasGet('removeStudent', { name });
+        renderStudentList();
+    }
+
+    async function editStudent(oldName) {
+        const newName = prompt(`Edit nama "${oldName}":`, oldName);
+        if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+        const trimmed = newName.trim();
+        if (state.students.some(s => s.toLowerCase() === trimmed.toLowerCase() && s !== oldName)) {
+            alert('Nama sudah ada!'); return;
         }
+        const idx = state.students.indexOf(oldName);
+        if (idx >= 0) state.students[idx] = trimmed;
+        // Update payments keys
+        Object.keys(state.payments).forEach(date => {
+            if (state.payments[date][oldName] !== undefined) {
+                state.payments[date][trimmed] = state.payments[date][oldName];
+                delete state.payments[date][oldName];
+            }
+        });
+        saveLocal();
+        if (GAS_URL) await gasGet('editStudent', { oldName, newName: trimmed });
         renderStudentList();
     }
 
@@ -610,15 +557,18 @@
         document.getElementById('studentCount').textContent = state.students.length;
         const list = document.getElementById('studentList');
         if (state.students.length === 0) {
-            list.innerHTML = '<div class="no-students">Belum ada siswa.</div>';
+            list.innerHTML = '<div class="no-data">Belum ada siswa. Tambahkan di ⚙️ Pengaturan.</div>';
             return;
         }
         list.innerHTML = state.students.map((name, i) => {
-            const safeName = name.replace(/'/g, "\\'");
+            const safe = name.replace(/'/g, "\\'");
             return `<li class="student-item">
                 <span class="num">${i+1}.</span>
                 <span class="name">${name}</span>
-                <button class="btn btn-danger" onclick="removeStudent('${safeName}')">✕</button>
+                <div class="actions">
+                    <button class="btn btn-sm btn-outline" onclick="editStudent('${safe}')">✏️</button>
+                    <button class="btn btn-danger" onclick="removeStudent('${safe}')">✕</button>
+                </div>
             </li>`;
         }).join('');
     }
@@ -633,10 +583,7 @@
             `<div class="day-btn ${state.paymentDays.includes(i) ? 'active' : ''}"
                 onclick="toggleDay(${i})">${name}</div>`
         ).join('');
-
-        document.getElementById('dayWarning').style.display =
-            state.paymentDays.length === 0 ? 'block' : 'none';
-
+        document.getElementById('dayWarning').style.display = state.paymentDays.length === 0 ? 'block' : 'none';
         renderHolidays();
     }
 
@@ -645,71 +592,195 @@
         if (idx >= 0) state.paymentDays.splice(idx, 1);
         else { state.paymentDays.push(day); state.paymentDays.sort(); }
         saveLocal();
-        if (GAS_URL) {
-            await gasGet('saveSettings', {
-                paymentDays: state.paymentDays.join(','),
-                startDate: '2026-07-27'
-            });
-        }
+        if (GAS_URL) await gasGet('saveSettings', { paymentDays: state.paymentDays.join(','), startDate: '2026-07-27' });
         renderSettings();
     }
 
-    // ===== HOLIDAYS =====
     async function addHoliday() {
         const dateInput = document.getElementById('holidayDate');
         const noteInput = document.getElementById('holidayNote');
         const date = dateInput.value;
         const note = noteInput.value.trim();
-        if (!date) { alert('Pilih tanggal terlebih dahulu!'); return; }
+        if (!date) { alert('Pilih tanggal!'); return; }
         if (!state.holidays) state.holidays = [];
-        if (state.holidays.some(h => h.date === date)) { alert('Tanggal libur sudah ada!'); return; }
-
+        if (state.holidays.some(h => h.date === date)) { alert('Sudah ada!'); return; }
         state.holidays.push({ date, note });
         state.holidays.sort((a, b) => a.date.localeCompare(b.date));
         saveLocal();
-        if (GAS_URL) {
-            await gasGet('addHoliday', { date, note });
-        }
-        dateInput.value = '';
-        noteInput.value = '';
+        if (GAS_URL) await gasGet('addHoliday', { date, note });
+        dateInput.value = ''; noteInput.value = '';
         renderHolidays();
     }
 
     async function removeHoliday(date) {
-        if (!confirm('Hapus tanggal libur ini?')) return;
+        if (!confirm('Hapus?')) return;
         state.holidays = state.holidays.filter(h => h.date !== date);
         saveLocal();
-        if (GAS_URL) {
-            await gasGet('removeHoliday', { date });
-        }
+        if (GAS_URL) await gasGet('removeHoliday', { date });
         renderHolidays();
     }
 
     function renderHolidays() {
-        const container = document.getElementById('holidayList');
+        const c = document.getElementById('holidayList');
         if (!state.holidays || state.holidays.length === 0) {
-            container.innerHTML = '<div style="text-align:center;color:#999;font-size:0.85rem;padding:10px;">Belum ada tanggal libur.</div>';
-            return;
+            c.innerHTML = '<div class="no-data">Belum ada tanggal libur.</div>'; return;
         }
-        container.innerHTML = state.holidays.map(h => {
-            const note = h.note ? ` — ${h.note}` : '';
+        c.innerHTML = state.holidays.map(h => {
+            const n = h.note ? ` — ${h.note}` : '';
             return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
-                <span>🔴 ${formatDisplayDate(h.date)}${note}</span>
+                <span>🔴 ${formatDisplayDate(h.date)}${n}</span>
                 <button class="btn btn-danger" onclick="removeHoliday('${h.date}')">✕</button>
             </div>`;
         }).join('');
     }
 
     async function resetAll() {
-        if (!confirm('Yakin hapus semua data? Tindakan ini tidak bisa dibatalkan!')) return;
-        if (!confirm('Sekali lagi: HAPUS SEMUA DATA?')) return;
-        if (GAS_URL) {
-            await gasGet('resetAll', {});
-        }
+        if (!confirm('Yakin hapus semua data?')) return;
+        if (!confirm('SEKALI LAGI: HAPUS SEMUA?')) return;
+        if (GAS_URL) await gasGet('resetAll', {});
         localStorage.removeItem('kas_titl1');
-        state = defaultState();
+        state = defaultState(); saveLocal();
+        toggleSettings();
+        renderStudentList();
+    }
+
+    // =============================================
+    // INPUT KAS — MODE HARIAN
+    // =============================================
+    function setPayMode(mode) {
+        payMode = mode;
+        document.getElementById('modeHarian').classList.toggle('active', mode === 'harian');
+        document.getElementById('modeSiswa').classList.toggle('active', mode === 'siswa');
+        document.getElementById('payModeHarian').style.display = mode === 'harian' ? '' : 'none';
+        document.getElementById('payModeSiswa').style.display = mode === 'siswa' ? '' : 'none';
+        if (mode === 'harian') renderInputPage();
+        if (mode === 'siswa') renderPerStudentSelect();
+    }
+
+    function changeDate(delta) {
+        const d = parseDate(currentDate);
+        d.setDate(d.getDate() + delta);
+        currentDate = formatDate(d);
+        renderInputPage();
+    }
+
+    function pickDate(val) { currentDate = val; renderInputPage(); }
+
+    function renderInputPage() {
+        const d = parseDate(currentDate);
+        const dayName = DAYS_ID[d.getDay()];
+        document.getElementById('datePicker').value = currentDate;
+        const holidayNote = getHolidayNote(currentDate);
+        let statusText = isPaymentDay(currentDate) ? '✅ Hari wajib bayar' : '⬜ Bukan hari wajib bayar';
+        if (holidayNote) statusText = `🏖️ Libur — ${holidayNote}`;
+        document.getElementById('dateDisplay').innerHTML = `${dayName}, ${formatDisplayDate(currentDate)}<small>${statusText}</small>`;
+
+        const content = document.getElementById('payContent');
+        if (state.students.length === 0) { content.innerHTML = '<div class="no-data">Belum ada siswa.</div>'; return; }
+        if (!isPaymentDay(currentDate)) { content.innerHTML = '<div class="warning-box">📅 Bukan hari wajib bayar.</div>'; return; }
+        if (!state.payments[currentDate]) state.payments[currentDate] = {};
+
+        let html = `<table class="pay-table">
+            <thead><tr><th style="width:36px;">No</th><th>Nama</th><th style="width:80px;text-align:center;">Bayar</th></tr></thead><tbody>`;
+        state.students.forEach((name, i) => {
+            const paid = state.payments[currentDate][name] === true;
+            const safe = name.replace(/'/g, "\\'");
+            html += `<tr><td>${i+1}</td><td>${name}</td><td style="text-align:center;">
+                <input type="checkbox" class="pay-check" ${paid?'checked':''}
+                    onchange="togglePayment('${currentDate}','${safe}',this.checked)"></td></tr>`;
+        });
+        html += '</tbody></table>';
+        content.innerHTML = html;
+    }
+
+    async function togglePayment(date, name, checked) {
+        if (!state.payments[date]) state.payments[date] = {};
+        state.payments[date][name] = checked;
         saveLocal();
-        showPage('students');
+        if (GAS_URL) await gasGet('savePayment', { date, name, paid: checked });
+    }
+
+    function checkAll() {
+        if (!isPaymentDay(currentDate) || state.students.length === 0) return;
+        if (!state.payments[currentDate]) state.payments[currentDate] = {};
+        state.students.forEach(name => { state.payments[currentDate][name] = true; });
+        saveLocal();
+        savePaymentsToGAS(currentDate);
+        renderInputPage();
+    }
+
+    function uncheckAll() {
+        if (!state.payments[currentDate]) return;
+        state.students.forEach(name => { state.payments[currentDate][name] = false; });
+        saveLocal();
+        savePaymentsToGAS(currentDate);
+        renderInputPage();
+    }
+
+    async function savePaymentsToGAS(date) {
+        if (!GAS_URL) return;
+        state.students.forEach(name => {
+            const paid = state.payments[date] && state.payments[date][name] === true;
+            gasGet('savePayment', { date, name, paid });
+        });
+    }
+
+    // =============================================
+    // INPUT KAS — MODE PER SISWA
+    // =============================================
+    function renderPerStudentSelect() {
+        const sel = document.getElementById('payStudentSelect');
+        const current = sel.value;
+        sel.innerHTML = '<option value="">— Pilih Nama —</option>';
+        state.students.forEach(name => {
+            sel.innerHTML += `<option value="${name}" ${name===current?'selected':''}>${name}</option>`;
+        });
+        document.getElementById('perStudentResult').innerHTML = '';
+    }
+
+    function getAllPaymentDatesUpToToday() {
+        const dates = [];
+        const today = new Date();
+        let d = new Date(START_DATE);
+        while (d <= today) {
+            const ds = formatDate(d);
+            if (isPaymentDay(ds)) dates.push(ds);
+            d.setDate(d.getDate() + 1);
+        }
+        return dates;
+    }
+
+    async function processPerStudentPay() {
+        const name = document.getElementById('payStudentSelect').value;
+        const amount = parseInt(document.getElementById('payAmount').value);
+        if (!name) { alert('Pilih nama siswa!'); return; }
+        if (!amount || amount < 1000 || amount % 1000 !== 0) { alert('Nominal harus kelipatan Rp1.000!'); return; }
+
+        const daysToPay = amount / 1000;
+        const allDates = getAllPaymentDatesUpToToday();
+        const unpaidDates = allDates.filter(d => !(state.payments[d] && state.payments[d][name]));
+
+        if (unpaidDates.length === 0) { alert(`${name} tidak ada tunggakan!`); return; }
+        const toPay = unpaidDates.slice(0, daysToPay);
+
+        toPay.forEach(date => {
+            if (!state.payments[date]) state.payments[date] = {};
+            state.payments[date][name] = true;
+        });
+        saveLocal();
+
+        if (GAS_URL) {
+            for (const date of toPay) {
+                await gasGet('savePayment', { date, name, paid: true });
+            }
+        }
+
+        document.getElementById('perStudentResult').innerHTML =
+            `<div class="warning-box" style="background:#d4edda;border-color:#27ae60;color:#155724;">
+                ✅ ${name} dibayar ${toPay.length} hari (Rp${(toPay.length*1000).toLocaleString('id-ID')})<br>
+                <small>${toPay.map(d => formatDisplayDate(d)).join(', ')}</small>
+            </div>`;
+        document.getElementById('payAmount').value = '';
     }
 
     // =============================================
@@ -729,80 +800,76 @@
 
     function renderRecap() {
         const allDates = getAllPaymentDates();
-
         const monthSelect = document.getElementById('recapMonth');
         const months = new Set();
-        allDates.forEach(ds => {
-            const d = parseDate(ds);
-            months.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-        });
+        allDates.forEach(ds => { const d = parseDate(ds); months.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); });
         const currentVal = monthSelect.value;
         monthSelect.innerHTML = '<option value="all">Semua Bulan</option>';
         [...months].sort().reverse().forEach(m => {
             const [y, mo] = m.split('-');
-            monthSelect.innerHTML += `<option value="${m}" ${m === currentVal ? 'selected' : ''}>${MONTHS_ID[parseInt(mo)-1]} ${y}</option>`;
+            monthSelect.innerHTML += `<option value="${m}" ${m===currentVal?'selected':''}>${MONTHS_ID[parseInt(mo)-1]} ${y}</option>`;
         });
 
         const filterVal = monthSelect.value;
         const dates = filterVal === 'all' ? allDates : allDates.filter(ds => ds.startsWith(filterVal));
-
         const students = state.students;
         let totalPaid = 0, totalUnpaid = 0, totalAmount = 0;
         const studentRecaps = [];
 
         students.forEach(name => {
             let paid = 0, unpaid = 0;
-            dates.forEach(d => {
-                if (state.payments[d] && state.payments[d][name]) paid++;
-                else unpaid++;
-            });
-            totalPaid += paid;
-            totalUnpaid += unpaid;
-            totalAmount += unpaid * 1000;
+            dates.forEach(d => { if (state.payments[d] && state.payments[d][name]) paid++; else unpaid++; });
+            totalPaid += paid; totalUnpaid += unpaid; totalAmount += unpaid * 1000;
             studentRecaps.push({ name, paid, unpaid });
         });
 
         document.getElementById('summaryGrid').innerHTML = `
-            <div class="summary-card blue">
-                <div class="num">${students.length}</div>
-                <div class="lbl">Total Siswa</div>
-            </div>
-            <div class="summary-card green">
-                <div class="num">${dates.length}</div>
-                <div class="lbl">Hari Wajib Bayar</div>
-            </div>
-            <div class="summary-card orange">
-                <div class="num">${totalPaid}</div>
-                <div class="lbl">Total Bayar</div>
-            </div>
-            <div class="summary-card red">
-                <div class="num">Rp${totalAmount.toLocaleString('id-ID')}</div>
-                <div class="lbl">Total Tunggakan</div>
-            </div>`;
+            <div class="summary-card blue"><div class="num">${students.length}</div><div class="lbl">Total Siswa</div></div>
+            <div class="summary-card green"><div class="num">${dates.length}</div><div class="lbl">Hari Wajib Bayar</div></div>
+            <div class="summary-card orange"><div class="num">${totalPaid}</div><div class="lbl">Total Bayar</div></div>
+            <div class="summary-card red"><div class="num">Rp${totalAmount.toLocaleString('id-ID')}</div><div class="lbl">Total Tunggakan</div></div>`;
+
+        // Search filter
+        const search = (document.getElementById('recapSearch').value || '').toLowerCase();
+        const filtered = search ? studentRecaps.filter(r => r.name.toLowerCase().includes(search)) : studentRecaps;
+
+        // Pagination
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+        if (recapPage > totalPages) recapPage = totalPages;
+        const start = (recapPage - 1) * PER_PAGE;
+        const pageData = filtered.slice(start, start + PER_PAGE);
 
         const table = document.getElementById('recapTable');
-        if (students.length === 0) {
-            table.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">Belum ada data.</td></tr>';
+        if (filtered.length === 0) {
+            table.innerHTML = '<tr><td colspan="5" class="no-data">Tidak ada data.</td></tr>';
+            document.getElementById('recapPagination').innerHTML = '';
             return;
         }
 
-        let html = `<thead><tr>
-            <th>No</th><th>Nama</th><th>Bayar</th><th>Tunggakan</th><th>Sisa Bayar</th>
-        </tr></thead><tbody>`;
-
-        studentRecaps.forEach((r, i) => {
+        let html = `<thead><tr><th>No</th><th>Nama</th><th>Bayar</th><th>Tunggakan</th><th>Sisa</th></tr></thead><tbody>`;
+        pageData.forEach((r, i) => {
+            const globalIdx = start + i + 1;
             html += `<tr>
-                <td>${i+1}</td>
-                <td>${r.name}</td>
+                <td>${globalIdx}</td><td>${r.name}</td>
                 <td><span class="badge badge-paid">${r.paid}x</span></td>
                 <td><span class="badge badge-unpaid">${r.unpaid}x</span></td>
-                <td class="${r.unpaid > 0 ? 'tunggakan-num' : 'tunggakan-zero'}">
-                    Rp${(r.unpaid * 1000).toLocaleString('id-ID')}
-                </td>
+                <td class="${r.unpaid>0?'tunggakan-num':'tunggakan-zero'}">Rp${(r.unpaid*1000).toLocaleString('id-ID')}</td>
             </tr>`;
         });
         html += '</tbody>';
         table.innerHTML = html;
+
+        // Pagination controls
+        const pg = document.getElementById('recapPagination');
+        pg.innerHTML = `
+            <button class="btn btn-sm btn-outline" onclick="recapGoPage(-1)" ${recapPage<=1?'disabled':''}>◀</button>
+            <span class="page-info">Hal ${recapPage}/${totalPages}</span>
+            <button class="btn btn-sm btn-outline" onclick="recapGoPage(1)" ${recapPage>=totalPages?'disabled':''}>▶</button>`;
+    }
+
+    function recapGoPage(delta) {
+        recapPage += delta;
+        renderRecap();
     }
 
     // =============================================
@@ -811,110 +878,59 @@
     function exportCSV() {
         const dates = getAllPaymentDates();
         const filterVal = document.getElementById('recapMonth').value;
-        const filteredDates = filterVal === 'all' ? dates : dates.filter(ds => ds.startsWith(filterVal));
-
-        let csv = '﻿';
-        csv += 'No,Nama,' + filteredDates.map(d => {
-            const dd = parseDate(d);
-            return `${dd.getDate()}/${dd.getMonth()+1}/${dd.getFullYear()}`;
-        }).join(',') + ',Tunggakan (Rp)\n';
-
+        const fd = filterVal === 'all' ? dates : dates.filter(ds => ds.startsWith(filterVal));
+        let csv = '﻿No,Nama,' + fd.map(d => { const dd=parseDate(d); return `${dd.getDate()}/${dd.getMonth()+1}/${dd.getFullYear()}`; }).join(',') + ',Tunggakan (Rp)\n';
         state.students.forEach((name, i) => {
-            const paidFlags = filteredDates.map(d =>
-                (state.payments[d] && state.payments[d][name]) ? '✓' : '✗'
-            );
-            const unpaid = filteredDates.filter(d => !(state.payments[d] && state.payments[d][name])).length;
-            csv += `${i+1},"${name}",${paidFlags.join(',')},${unpaid * 1000}\n`;
+            const flags = fd.map(d => (state.payments[d]&&state.payments[d][name])?'✓':'✗');
+            const unpaid = fd.filter(d => !(state.payments[d]&&state.payments[d][name])).length;
+            csv += `${i+1},"${name}",${flags.join(',')},${unpaid*1000}\n`;
         });
-        downloadFile(csv, `Kas_TITL1_${filterVal === 'all' ? 'Semua' : filterVal}.csv`, 'text/csv;charset=utf-8');
+        downloadFile(csv, `Kas_TITL1_${filterVal==='all'?'Semua':filterVal}.csv`, 'text/csv;charset=utf-8');
     }
 
     function exportExcel() {
-        if (typeof XLSX === 'undefined') { alert('Library Excel belum dimuat. Coba lagi.'); return; }
-
+        if (typeof XLSX === 'undefined') { alert('Library belum dimuat.'); return; }
         const dates = getAllPaymentDates();
         const filterVal = document.getElementById('recapMonth').value;
-        const filteredDates = filterVal === 'all' ? dates : dates.filter(ds => ds.startsWith(filterVal));
-
-        const wsData = [['No', 'Nama']];
-        filteredDates.forEach(d => {
-            const dd = parseDate(d);
-            wsData[0].push(`${dd.getDate()}/${dd.getMonth()+1}`);
-        });
+        const fd = filterVal === 'all' ? dates : dates.filter(ds => ds.startsWith(filterVal));
+        const wsData = [['No','Nama']];
+        fd.forEach(d => { const dd=parseDate(d); wsData[0].push(`${dd.getDate()}/${dd.getMonth()+1}`); });
         wsData[0].push('Tunggakan (Rp)');
-
         state.students.forEach((name, i) => {
             const row = [i+1, name];
-            filteredDates.forEach(d => {
-                row.push((state.payments[d] && state.payments[d][name]) ? '✓' : '✗');
-            });
-            const unpaid = filteredDates.filter(d => !(state.payments[d] && state.payments[d][name])).length;
-            row.push(unpaid * 1000);
-            wsData.push(row);
+            fd.forEach(d => { row.push((state.payments[d]&&state.payments[d][name])?'✓':'✗'); });
+            const unpaid = fd.filter(d => !(state.payments[d]&&state.payments[d][name])).length;
+            row.push(unpaid*1000); wsData.push(row);
         });
-
-        wsData.push([]);
-        wsData.push(['', 'TOTAL', ...filteredDates.map(d => {
-            const count = state.students.filter(s => state.payments[d] && state.payments[d][s]).length;
-            return `${count}/${state.students.length}`;
-        }), '']);
-
+        wsData.push([]); wsData.push(['','TOTAL',...fd.map(d=>`${state.students.filter(s=>state.payments[d]&&state.payments[d][s]).length}/${state.students.length}`),'']);
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(wsData);
-        ws['!cols'] = wsData[0].map((_, ci) => {
-            if (ci <= 1) return { wch: 15 };
-            if (ci === wsData[0].length - 1) return { wch: 15 };
-            return { wch: 6 };
-        });
+        ws['!cols'] = wsData[0].map((_,ci)=>({wch: ci<=1?15:ci===wsData[0].length-1?15:6}));
         XLSX.utils.book_append_sheet(wb, ws, 'Rekap Kas');
-        XLSX.writeFile(wb, `Kas_TITL1_${filterVal === 'all' ? 'Semua' : filterVal}.xlsx`);
+        XLSX.writeFile(wb, `Kas_TITL1_${filterVal==='all'?'Semua':filterVal}.xlsx`);
     }
 
     function downloadFile(content, filename, type) {
         const blob = new Blob([content], { type });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename; a.click();
+        const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
         URL.revokeObjectURL(url);
     }
 
     // =============================================
-    // PWA INSTALL
+    // PWA
     // =============================================
     let deferredPrompt = null;
-
-    window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        deferredPrompt = e;
-        document.getElementById('installBanner').classList.add('show');
-    });
-
-    function installApp() {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(choice => {
-            if (choice.outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
-            deferredPrompt = null;
-        });
-    }
-
-    function dismissInstall() {
-        document.getElementById('installBanner').classList.remove('show');
-    }
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-    }
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBanner').classList.add('show'); });
+    function installApp() { if (!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt.userChoice.then(c => { if (c.outcome==='accepted') document.getElementById('installBanner').classList.remove('show'); deferredPrompt=null; }); }
+    function dismissInstall() { document.getElementById('installBanner').classList.remove('show'); }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
     // =============================================
     // INIT
     // =============================================
     renderStudentList();
-    if (GAS_URL) {
-        loadDataFromGAS();
-    } else {
-        setSyncBadge('no-url');
-    }
+    if (GAS_URL) loadDataFromGAS();
     </script>
 </body>
 </html>
