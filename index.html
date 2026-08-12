@@ -378,7 +378,7 @@
     }
 
     // =============================================
-    // GAS API
+    // GAS API — Semua operasi pakai GET
     // =============================================
     function getGasUrl() {
         return localStorage.getItem('kas_gas_url') || '';
@@ -392,30 +392,30 @@
         else el.innerHTML = '❌ Error';
     }
 
-    async function api(action, method, data) {
-        const url = getGasUrl();
-        if (!url) return { success: false, error: 'GAS URL belum diatur' };
+    // Kirim request GET ke GAS Web App
+    // Semua action dan parameter dikirim via query string
+    async function gasGet(action, params) {
+        const baseUrl = getGasUrl();
+        if (!baseUrl) return { success: false, error: 'GAS URL belum diatur' };
+
+        const query = new URLSearchParams({ action, ...params });
+        const url = baseUrl + '?' + query.toString();
 
         try {
-            const opts = { method, redirect: 'follow' };
-            if (method === 'POST') {
-                opts.headers = { 'Content-Type': 'text/plain' };
-                opts.body = JSON.stringify(data);
-            }
-            const res = await fetch(url + (method === 'GET' ? '?action=' + action : ''), opts);
-            const json = await res.json();
-            return json;
+            const res = await fetch(url, { redirect: 'follow' });
+            const text = await res.text();
+            return JSON.parse(text);
         } catch(e) {
             return { success: false, error: e.toString() };
         }
     }
 
+    // Load semua data dari Spreadsheet
     async function loadDataFromGAS() {
         const url = getGasUrl();
         if (!url) { setSyncBadge('no-url'); return; }
-        setSyncBadge('connected');
 
-        const result = await api('getData', 'GET');
+        const result = await gasGet('getData', {});
         if (result.success && result.data) {
             state.students = result.data.students || [];
             state.payments = result.data.payments || {};
@@ -430,6 +430,7 @@
         }
     }
 
+    // Sync manual (klik badge / tombol)
     async function syncNow() {
         if (!getGasUrl()) {
             alert('Atur URL Google Apps Script dulu di tab Pengaturan!');
@@ -454,13 +455,6 @@
     function hideLoading() {
         const el = document.getElementById('loadingOverlay');
         if (el) el.remove();
-    }
-
-    async function postToGAS(action, data) {
-        const url = getGasUrl();
-        if (!url) return false;
-        const result = await api(action, 'POST', data);
-        return result.success;
     }
 
     // =============================================
@@ -592,7 +586,7 @@
         state.payments[date][name] = checked;
         saveLocal();
         if (getGasUrl()) {
-            await postToGAS('savePayment', { action: 'savePayment', date, name, paid: checked });
+            await gasGet('savePayment', { date, name, paid: checked });
         }
     }
 
@@ -610,7 +604,7 @@
         state.students.push(name);
         saveLocal();
         if (getGasUrl()) {
-            await postToGAS('addStudent', { action: 'addStudent', name });
+            await gasGet('addStudent', { name });
         }
         input.value = '';
         input.focus();
@@ -631,7 +625,7 @@
         });
         saveLocal();
         if (getGasUrl()) {
-            await postToGAS('addBulkStudents', { action: 'addBulkStudents', names: lines });
+            await gasGet('addBulkStudents', { names: lines.join('|') });
         }
         ta.value = '';
         alert(`${added} siswa ditambahkan!`);
@@ -643,7 +637,7 @@
         state.students = state.students.filter(s => s !== name);
         saveLocal();
         if (getGasUrl()) {
-            await postToGAS('removeStudent', { action: 'removeStudent', name });
+            await gasGet('removeStudent', { name });
         }
         renderStudentList();
     }
@@ -694,9 +688,8 @@
         else { state.paymentDays.push(day); state.paymentDays.sort(); }
         saveLocal();
         if (getGasUrl()) {
-            await postToGAS('saveSettings', {
-                action: 'saveSettings',
-                paymentDays: state.paymentDays,
+            await gasGet('saveSettings', {
+                paymentDays: state.paymentDays.join(','),
                 startDate: '2026-07-27'
             });
         }
@@ -717,7 +710,7 @@
         state.holidays.sort((a, b) => a.date.localeCompare(b.date));
         saveLocal();
         if (getGasUrl()) {
-            await postToGAS('addHoliday', { action: 'addHoliday', date, note });
+            await gasGet('addHoliday', { date, note });
         }
         dateInput.value = '';
         noteInput.value = '';
@@ -729,7 +722,7 @@
         state.holidays = state.holidays.filter(h => h.date !== date);
         saveLocal();
         if (getGasUrl()) {
-            await postToGAS('removeHoliday', { action: 'removeHoliday', date });
+            await gasGet('removeHoliday', { date });
         }
         renderHolidays();
     }
@@ -753,7 +746,7 @@
         if (!confirm('Yakin hapus semua data? Tindakan ini tidak bisa dibatalkan!')) return;
         if (!confirm('Sekali lagi: HAPUS SEMUA DATA?')) return;
         if (getGasUrl()) {
-            await postToGAS('resetAll', { action: 'resetAll' });
+            await gasGet('resetAll', {});
         }
         localStorage.removeItem('kas_titl1');
         state = defaultState();
