@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KAS TITL 1</title>
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            min-height: 100vh;
+            min-height: 100dvh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 14px 16px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        header h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sync-indicator {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .sync-indicator.online { background: rgba(39,174,96,0.3); color: #6fdb9e; }
+        .sync-indicator.offline { background: rgba(231,76,60,0.3); color: #f5a8a1; }
+        .sync-indicator.syncing { background: rgba(241,196,15,0.3); color: #f5d76e; }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            color: #8899aa;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 70px;
+            user-select: none;
+        }
+
+        .tab:hover { color: #e0e0e0; background: rgba(255,255,255,0.05); }
+        .tab.active { color: #4fc3f7; border-bottom-color: #4fc3f7; background: rgba(79,195,247,0.08); }
+
+        .tab-icon { display: block; font-size: 1.2rem; margin-bottom: 2px; }
+
+        /* ===== MAIN ===== */
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 12px;
+            padding-bottom: 80px;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            color: #1a1a2e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ===== INPUTS ===== */
+        input[type="text"], input[type="date"], textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+            outline: none;
+            font-family: inherit;
+            -webkit-appearance: none;
+        }
+
+        input[type="text"]:focus, textarea:focus { border-color: #4fc3f7; }
+        textarea { resize: vertical; min-height: 100px; }
+
+        label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        .input-group { margin-bottom: 12px; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-primary { background: #1a1a2e; color: white; }
+        .btn-primary:hover { background: #0f3460; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #219a52; }
+        .btn-danger { background: #e74c3c; color: white; padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-outline { background: transparent; color: #1a1a2e; border: 2px solid #e0e0e0; }
+        .btn-outline:hover { border-color: #1a1a2e; }
+        .btn-export { background: #0f3460; color: white; font-size: 0.85rem; padding: 8px 16px; }
+        .btn-export:hover { background: #1a1a2e; }
+
+        .inline-flex { display: flex; gap: 8px; align-items: flex-end; }
+        .inline-flex .input-group { flex: 1; margin-bottom: 0; }
+
+        /* ===== STUDENT LIST ===== */
+        .student-list { list-style: none; max-height: 400px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+        }
+
+        .student-item:last-child { border-bottom: none; }
+        .student-item .num { color: #999; font-size: 0.8rem; margin-right: 10px; min-width: 24px; }
+        .student-item .name { flex: 1; }
+
+        /* ===== DAY GRID ===== */
+        .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
+
+        .day-btn {
+            padding: 10px 2px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: white;
+            user-select: none;
+        }
+
+        .day-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+        .day-btn:hover { border-color: #1a1a2e; }
+
+        /* ===== DATE NAV ===== */
+        .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .date-nav .btn { padding: 8px 14px; font-size: 1rem; }
+
+        .date-display {
+            flex: 1;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1a1a2e;
+        }
+
+        .date-display small {
+            display: block;
+            font-weight: 400;
+            color: #888;
+            font-size: 0.75rem;
+        }
+
+        /* ===== PAY TABLE ===== */
+        .pay-table { width: 100%; border-collapse: collapse; }
+
+        .pay-table th {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.8rem;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .pay-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.88rem;
+        }
+
+        .pay-table tr:last-child td { border-bottom: none; }
+        .pay-check { width: 22px; height: 22px; cursor: pointer; accent-color: #27ae60; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .badge-paid { background: #d4edda; color: #155724; }
+        .badge-unpaid { background: #f8d7da; color: #721c24; }
+
+        /* ===== RECAP ===== */
+        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+
+        .summary-card { padding: 14px; border-radius: 10px; text-align: center; }
+        .summary-card .num { font-size: 1.6rem; font-weight: 800; }
+        .summary-card .lbl { font-size: 0.75rem; color: #666; margin-top: 4px; }
+        .summary-card.green { background: #d4edda; }
+        .summary-card.green .num { color: #155724; }
+        .summary-card.red { background: #f8d7da; }
+        .summary-card.red .num { color: #721c24; }
+        .summary-card.blue { background: #d1ecf1; }
+        .summary-card.blue .num { color: #0c5460; }
+        .summary-card.orange { background: #fff3cd; }
+        .summary-card.orange .num { color: #856404; }
+
+        .recap-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+
+        .recap-table th {
+            background: #1a1a2e;
+            color: white;
+            padding: 10px 10px;
+            text-align: left;
+            font-size: 0.78rem;
+        }
+
+        .recap-table td { padding: 10px 10px; border-bottom: 1px solid #f0f0f0; }
+        .recap-table tr:nth-child(even) { background: #f8f9fa; }
+        .tunggakan-num { font-weight: 700; color: #e74c3c; }
+        .tunggakan-zero { color: #27ae60; }
+
+        /* ===== MISC ===== */
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            color: #856404;
+            margin-bottom: 14px;
+        }
+
+        .no-students { text-align: center; padding: 24px; color: #999; font-size: 0.88rem; }
+
+        .export-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .month-filter {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .month-filter select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: white;
+            outline: none;
+        }
+
+        /* Install banner */
+        .install-banner {
+            background: linear-gradient(135deg, #0f3460, #1a1a2e);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .install-banner.show { display: flex; }
+        .install-banner .btn { background: #4fc3f7; color: #1a1a2e; padding: 6px 14px; font-size: 0.8rem; white-space: nowrap; }
+        .install-banner .dismiss { background: none; color: #aaa; border: none; cursor: pointer; font-size: 1.2rem; padding: 4px; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .day-grid { grid-template-columns: repeat(4, 1fr); }
+            main { padding: 10px; padding-bottom: 80px; }
+            .card { padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-row">
+            <h1 style="flex:1;">📋 KAS TITL 1</h1>
+            <span class="sync-indicator online" id="syncStatus" onclick="manualSync()" title="Klik untuk sync manual">☁️ Online</span>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <div class="tab active" onclick="showPage('students')">
+            <span class="tab-icon">👥</span>Siswa
+        </div>
+        <div class="tab" onclick="showPage('settings')">
+            <span class="tab-icon">⚙️</span>Pengaturan
+        </div>
+        <div class="tab" onclick="showPage('input')">
+            <span class="tab-icon">💰</span>Input Kas
+        </div>
+        <div class="tab" onclick="showPage('recap')">
+            <span class="tab-icon">📊</span>Rekap
+        </div>
+    </nav>
+
+    <main>
+        <!-- INSTALL BANNER -->
+        <div class="install-banner" id="installBanner">
+            <span>📲 Install aplikasi ini ke HP?</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <button class="btn" onclick="installApp()">Install</button>
+                <button class="dismiss" onclick="dismissInstall()">✕</button>
+            </div>
+        </div>
+
+        <!-- SISWA -->
+        <div id="page-students" class="page active">
+            <div class="card">
+                <h2>➕ Tambah Siswa</h2>
+                <div class="input-group">
+                    <label>Nama Siswa</label>
+                    <div class="inline-flex">
+                        <input type="text" id="studentName" placeholder="Ketik nama..." onkeydown="if(event.key==='Enter')addStudent()">
+                        <button class="btn btn-primary" onclick="addStudent()">Tambah</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📋 Input Banyak Sekaligus</h2>
+                <div class="input-group">
+                    <label>Satu nama per baris</label>
+                    <textarea id="bulkNames" placeholder="Ahmad&#10;Budi&#10;Citra&#10;Diana"></textarea>
+                </div>
+                <button class="btn btn-success" onclick="addBulkStudents()">Tambah Semua</button>
+            </div>
+
+            <div class="card">
+                <h2>👥 Daftar Siswa (<span id="studentCount">0</span>)</h2>
+                <ul class="student-list" id="studentList"></ul>
+            </div>
+        </div>
+
+        <!-- PENGATURAN -->
+        <div id="page-settings" class="page">
+            <div class="card">
+                <h2>📅 Hari Wajib Bayar</h2>
+                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Pilih hari apa saja siswa wajib membayar kas Rp1.000. Mulai dari 27 Juli 2026.</p>
+                <div class="day-grid" id="dayGrid"></div>
+                <div class="warning-box" id="dayWarning" style="display:none;">
+                    ⚠️ Belum ada hari yang dipilih! Siswa tidak akan diminta bayar.
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🏖️ Tanggal Libur</h2>
+                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Tanggal yang ditandai libur tidak akan diminta bayar kas (tanggal merah, libur sekolah, dll).</p>
+                <div class="inline-flex" style="margin-bottom:12px;">
+                    <div class="input-group">
+                        <label>Tanggal</label>
+                        <input type="date" id="holidayDate">
+                    </div>
+                    <div class="input-group" style="flex:2;">
+                        <label>Keterangan</label>
+                        <input type="text" id="holidayNote" placeholder="Misal: HUT RI" onkeydown="if(event.key==='Enter')addHoliday()">
+                    </div>
+                    <button class="btn btn-primary" onclick="addHoliday()">Tambah</button>
+                </div>
+                <div id="holidayList"></div>
+            </div>
+
+            <div class="card">
+                <h2>☁️ Sinkronisasi Cloud</h2>
+                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Data otomatis tersimpan ke cloud Firebase. Bisa diakses dari HP lain.</p>
+                <div id="cloudStatus" style="font-size:0.85rem; margin-bottom:10px;"></div>
+                <button class="btn btn-primary" style="font-size:0.85rem;" onclick="manualSync()">🔄 Sync Sekarang</button>
+            </div>
+
+            <div class="card">
+                <h2>🗑️ Hapus Semua Data</h2>
+                <p style="font-size:0.82rem; color:#666; margin-bottom:12px;">Hapus semua data siswa dan pembayaran dari lokal & cloud.</p>
+                <button class="btn btn-danger" style="padding:10px 20px; font-size:0.9rem;" onclick="resetAll()">Hapus Semua Data</button>
+            </div>
+        </div>
+
+        <!-- INPUT KAS -->
+        <div id="page-input" class="page">
+            <div class="card">
+                <h2>📅 Pilih Tanggal</h2>
+                <div class="date-nav">
+                    <button class="btn btn-outline" onclick="changeDate(-1)">◀</button>
+                    <div class="date-display" id="dateDisplay"></div>
+                    <button class="btn btn-outline" onclick="changeDate(1)">▶</button>
+                </div>
+                <div style="text-align:center; margin-bottom:10px;">
+                    <input type="date" id="datePicker" style="width:auto;" onchange="pickDate(this.value)">
+                </div>
+            </div>
+
+            <div class="card" id="payCard">
+                <h2>💵 Pembayaran</h2>
+                <div id="payContent"></div>
+            </div>
+        </div>
+
+        <!-- REKAP -->
+        <div id="page-recap" class="page">
+            <div class="card">
+                <h2>📊 Ringkasan</h2>
+                <div class="month-filter">
+                    <label style="margin:0;">Filter Bulan:</label>
+                    <select id="recapMonth" onchange="renderRecap()"></select>
+                </div>
+                <div class="summary-grid" id="summaryGrid"></div>
+                <div class="export-row">
+                    <button class="btn btn-export" onclick="exportCSV()">📥 Download CSV</button>
+                    <button class="btn btn-export" onclick="exportExcel()">📥 Download Excel</button>
+                </div>
+            </div>
+            <div class="card">
+                <h2>📋 Rekap Per Siswa</h2>
+                <div style="overflow-x:auto;">
+                    <table class="recap-table" id="recapTable"></table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+    <script>
+    // ========================================
+    // CONFIG - Ganti dengan Firebase project kamu
+    // ========================================
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyDUMMY-CHANGE-THIS",
+        authDomain: "kas-titl1.firebaseapp.com",
+        databaseURL: "https://kas-titl1-default-rtdb.firebaseio.com",
+        projectId: "kas-titl1"
+    };
+
+    const START_DATE = new Date('2026-07-27');
+    const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+    // ========================================
+    // FIREBASE INIT
+    // ========================================
+    let db = null;
+    let firebaseReady = false;
+
+    try {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        db = firebase.database();
+        firebaseReady = true;
+    } catch(e) {
+        console.warn('Firebase init failed, using localStorage only', e);
+    }
+
+    // ========================================
+    // STATE MANAGEMENT (localStorage + Cloud)
+    // ========================================
+    let state = loadState();
+    let currentDate = getToday();
+
+    function defaultState() {
+        return {
+            students: [],
+            paymentDays: [1, 2, 3, 4, 5, 6],
+            payments: {},
+            holidays: []
+        };
+    }
+
+    function loadState() {
+        try {
+            const s = JSON.parse(localStorage.getItem('kas_titl1'));
+            if (s && s.students) return s;
+        } catch(e) {}
+        return defaultState();
+    }
+
+    function saveState() {
+        localStorage.setItem('kas_titl1', JSON.stringify(state));
+        syncToCloud();
+    }
+
+    function syncToCloud() {
+        if (!firebaseReady || !db) {
+            updateSyncUI('offline');
+            return;
+        }
+        updateSyncUI('syncing');
+        db.ref('kas_titl1').set(state)
+            .then(() => updateSyncUI('online'))
+            .catch(e => {
+                console.warn('Sync failed', e);
+                updateSyncUI('offline');
+            });
+    }
+
+    function loadFromCloud() {
+        if (!firebaseReady || !db) return;
+        updateSyncUI('syncing');
+        db.ref('kas_titl1').once('value')
+            .then(snap => {
+                const cloudData = snap.val();
+                if (cloudData && cloudData.students) {
+                    state = cloudData;
+                    if (!state.holidays) state.holidays = [];
+                    localStorage.setItem('kas_titl1', JSON.stringify(state));
+                }
+                updateSyncUI('online');
+                // Re-render current page
+                const active = document.querySelector('.page.active');
+                if (active) {
+                    const pageId = active.id.replace('page-', '');
+                    showPage(pageId);
+                }
+            })
+            .catch(e => {
+                console.warn('Cloud load failed', e);
+                updateSyncUI('offline');
+            });
+    }
+
+    function manualSync() {
+        loadFromCloud();
+    }
+
+    function updateSyncUI(status) {
+        const el = document.getElementById('syncStatus');
+        const cloudEl = document.getElementById('cloudStatus');
+        if (!el) return;
+
+        el.className = 'sync-indicator ' + status;
+        if (status === 'online') {
+            el.innerHTML = '☁️ Online';
+            if (cloudEl) cloudEl.innerHTML = '<span style="color:#27ae60;">✅ Terhubung ke cloud</span>';
+        } else if (status === 'syncing') {
+            el.innerHTML = '🔄 Sync...';
+            if (cloudEl) cloudEl.innerHTML = '<span style="color:#f39c12;">⏳ Sedang menyinkronkan...</span>';
+        } else {
+            el.innerHTML = '📴 Offline';
+            if (cloudEl) cloudEl.innerHTML = '<span style="color:#e74c3c;">❌ Offline — data hanya tersimpan lokal</span>';
+        }
+    }
+
+    // ========================================
+    // UTILITY
+    // ========================================
+    function getToday() { return formatDate(new Date()); }
+
+    function formatDate(d) {
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function parseDate(s) {
+        const [y,m,d] = s.split('-').map(Number);
+        return new Date(y, m-1, d);
+    }
+
+    function isPaymentDay(dateStr) {
+        const d = parseDate(dateStr);
+        if (d < START_DATE) return false;
+        if (!state.paymentDays.includes(d.getDay())) return false;
+        // Cek apakah tanggal ini masuk daftar libur
+        if (state.holidays && state.holidays.some(h => h.date === dateStr)) return false;
+        return true;
+    }
+
+    function getHolidayNote(dateStr) {
+        if (!state.holidays) return '';
+        const h = state.holidays.find(h => h.date === dateStr);
+        return h ? h.note : '';
+    }
+
+    function formatDisplayDate(dateStr) {
+        const d = parseDate(dateStr);
+        return `${d.getDate()} ${MONTHS_ID[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    // ========================================
+    // TAB NAVIGATION
+    // ========================================
+    function showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        const idx = ['students','settings','input','recap'].indexOf(page);
+        if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
+
+        if (page === 'input') renderInputPage();
+        if (page === 'students') renderStudentList();
+        if (page === 'settings') renderSettings();
+        if (page === 'recap') renderRecap();
+    }
+
+    // ========================================
+    // INPUT KAS
+    // ========================================
+    function changeDate(delta) {
+        const d = parseDate(currentDate);
+        d.setDate(d.getDate() + delta);
+        currentDate = formatDate(d);
+        renderInputPage();
+    }
+
+    function pickDate(val) {
+        currentDate = val;
+        renderInputPage();
+    }
+
+    function renderInputPage() {
+        const d = parseDate(currentDate);
+        const dayName = DAYS_ID[d.getDay()];
+
+        document.getElementById('datePicker').value = currentDate;
+        const holidayNote = getHolidayNote(currentDate);
+        const isHoliday = holidayNote !== '';
+        let statusText = isPaymentDay(currentDate) ? '✅ Hari wajib bayar' : '⬜ Bukan hari wajib bayar';
+        if (isHoliday) statusText = `🏖️ Libur — ${holidayNote}`;
+        document.getElementById('dateDisplay').innerHTML =
+            `${dayName}, ${formatDisplayDate(currentDate)}<small>${statusText}</small>`;
+
+        const content = document.getElementById('payContent');
+
+        if (state.students.length === 0) {
+            content.innerHTML = '<div class="no-students">Belum ada siswa. Tambahkan di tab "Siswa".</div>';
+            return;
+        }
+
+        if (!isPaymentDay(currentDate)) {
+            content.innerHTML = '<div class="warning-box">📅 Hari ini bukan hari wajib bayar. Tidak ada yang perlu dibayar.</div>';
+            return;
+        }
+
+        if (!state.payments[currentDate]) state.payments[currentDate] = {};
+
+        let html = `<table class="pay-table">
+            <thead><tr>
+                <th style="width:36px;">No</th>
+                <th>Nama</th>
+                <th style="width:80px;text-align:center;">Bayar</th>
+            </tr></thead><tbody>`;
+
+        state.students.forEach((name, i) => {
+            const paid = state.payments[currentDate][name] === true;
+            const safeName = name.replace(/'/g, "\\'");
+            html += `<tr>
+                <td>${i+1}</td>
+                <td>${name}</td>
+                <td style="text-align:center;">
+                    <input type="checkbox" class="pay-check" ${paid ? 'checked' : ''}
+                        onchange="togglePayment('${currentDate}','${safeName}', this.checked)">
+                </td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        content.innerHTML = html;
+    }
+
+    function togglePayment(date, name, checked) {
+        if (!state.payments[date]) state.payments[date] = {};
+        state.payments[date][name] = checked;
+        saveState();
+    }
+
+    // ========================================
+    // SISWA
+    // ========================================
+    function addStudent() {
+        const input = document.getElementById('studentName');
+        const name = input.value.trim();
+        if (!name) return;
+        if (state.students.some(s => s.toLowerCase() === name.toLowerCase())) {
+            alert('Nama sudah ada!');
+            return;
+        }
+        state.students.push(name);
+        saveState();
+        input.value = '';
+        input.focus();
+        renderStudentList();
+    }
+
+    function addBulkStudents() {
+        const ta = document.getElementById('bulkNames');
+        const lines = ta.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+        if (lines.length === 0) return;
+
+        let added = 0;
+        lines.forEach(name => {
+            if (!state.students.some(s => s.toLowerCase() === name.toLowerCase())) {
+                state.students.push(name);
+                added++;
+            }
+        });
+        saveState();
+        ta.value = '';
+        alert(`${added} siswa ditambahkan!`);
+        renderStudentList();
+    }
+
+    function removeStudent(name) {
+        if (!confirm(`Hapus "${name}"?`)) return;
+        state.students = state.students.filter(s => s !== name);
+        saveState();
+        renderStudentList();
+    }
+
+    function renderStudentList() {
+        document.getElementById('studentCount').textContent = state.students.length;
+        const list = document.getElementById('studentList');
+
+        if (state.students.length === 0) {
+            list.innerHTML = '<div class="no-students">Belum ada siswa.</div>';
+            return;
+        }
+
+        list.innerHTML = state.students.map((name, i) => {
+            const safeName = name.replace(/'/g, "\\'");
+            return `<li class="student-item">
+                <span class="num">${i+1}.</span>
+                <span class="name">${name}</span>
+                <button class="btn btn-danger" onclick="removeStudent('${safeName}')">✕</button>
+            </li>`;
+        }).join('');
+    }
+
+    // ========================================
+    // PENGATURAN
+    // ========================================
+    function renderSettings() {
+        const grid = document.getElementById('dayGrid');
+        const dayNames = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+        grid.innerHTML = dayNames.map((name, i) =>
+            `<div class="day-btn ${state.paymentDays.includes(i) ? 'active' : ''}"
+                onclick="toggleDay(${i})">${name}</div>`
+        ).join('');
+
+        document.getElementById('dayWarning').style.display =
+            state.paymentDays.length === 0 ? 'block' : 'none';
+
+        renderHolidays();
+    }
+
+    function toggleDay(day) {
+        const idx = state.paymentDays.indexOf(day);
+        if (idx >= 0) state.paymentDays.splice(idx, 1);
+        else { state.paymentDays.push(day); state.paymentDays.sort(); }
+        saveState();
+        renderSettings();
+    }
+
+    // ===== HOLIDAYS =====
+    function addHoliday() {
+        const dateInput = document.getElementById('holidayDate');
+        const noteInput = document.getElementById('holidayNote');
+        const date = dateInput.value;
+        const note = noteInput.value.trim();
+
+        if (!date) { alert('Pilih tanggal terlebih dahulu!'); return; }
+        if (!state.holidays) state.holidays = [];
+        if (state.holidays.some(h => h.date === date)) {
+            alert('Tanggal libur sudah ada!');
+            return;
+        }
+
+        state.holidays.push({ date, note });
+        state.holidays.sort((a, b) => a.date.localeCompare(b.date));
+        saveState();
+        dateInput.value = '';
+        noteInput.value = '';
+        renderHolidays();
+    }
+
+    function removeHoliday(date) {
+        if (!confirm('Hapus tanggal libur ini?')) return;
+        state.holidays = state.holidays.filter(h => h.date !== date);
+        saveState();
+        renderHolidays();
+    }
+
+    function renderHolidays() {
+        const container = document.getElementById('holidayList');
+        if (!state.holidays || state.holidays.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:#999;font-size:0.85rem;padding:10px;">Belum ada tanggal libur.</div>';
+            return;
+        }
+
+        container.innerHTML = state.holidays.map(h => {
+            const note = h.note ? ` — ${h.note}` : '';
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:0.88rem;">
+                <span>🔴 ${formatDisplayDate(h.date)}${note}</span>
+                <button class="btn btn-danger" onclick="removeHoliday('${h.date}')">✕</button>
+            </div>`;
+        }).join('');
+    }
+
+    function resetAll() {
+        if (!confirm('Yakin hapus semua data? Tindakan ini tidak bisa dibatalkan!')) return;
+        if (!confirm('Sekali lagi: HAPUS SEMUA DATA?')) return;
+
+        // Delete from cloud too
+        if (firebaseReady && db) {
+            db.ref('kas_titl1').remove().catch(() => {});
+        }
+        localStorage.removeItem('kas_titl1');
+        state = defaultState();
+        saveState();
+        showPage('students');
+    }
+
+    // ========================================
+    // REKAP
+    // ========================================
+    function getAllPaymentDates() {
+        const dates = [];
+        const today = new Date();
+        let d = new Date(START_DATE);
+        while (d <= today) {
+            const ds = formatDate(d);
+            if (isPaymentDay(ds)) dates.push(ds);
+            d.setDate(d.getDate() + 1);
+        }
+        return dates;
+    }
+
+    function renderRecap() {
+        const allDates = getAllPaymentDates();
+
+        // Populate month filter
+        const monthSelect = document.getElementById('recapMonth');
+        const months = new Set();
+        allDates.forEach(ds => {
+            const d = parseDate(ds);
+            months.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+        });
+        const currentVal = monthSelect.value;
+        monthSelect.innerHTML = '<option value="all">Semua Bulan</option>';
+        [...months].sort().reverse().forEach(m => {
+            const [y, mo] = m.split('-');
+            const opt = `<option value="${m}" ${m === currentVal ? 'selected' : ''}>${MONTHS_ID[parseInt(mo)-1]} ${y}</option>`;
+            monthSelect.innerHTML += opt;
+        });
+
+        // Filter dates by month
+        const filterVal = monthSelect.value;
+        const dates = filterVal === 'all' ? allDates : allDates.filter(ds => ds.startsWith(filterVal));
+
+        const students = state.students;
+        const totalDays = dates.length;
+
+        let totalPaid = 0, totalUnpaid = 0, totalAmount = 0;
+        const studentRecaps = [];
+
+        students.forEach(name => {
+            let paid = 0, unpaid = 0;
+            dates.forEach(d => {
+                if (state.payments[d] && state.payments[d][name]) paid++;
+                else unpaid++;
+            });
+            totalPaid += paid;
+            totalUnpaid += unpaid;
+            totalAmount += unpaid * 1000;
+            studentRecaps.push({ name, paid, unpaid });
+        });
+
+        document.getElementById('summaryGrid').innerHTML = `
+            <div class="summary-card blue">
+                <div class="num">${students.length}</div>
+                <div class="lbl">Total Siswa</div>
+            </div>
+            <div class="summary-card green">
+                <div class="num">${totalDays}</div>
+                <div class="lbl">Hari Wajib Bayar</div>
+            </div>
+            <div class="summary-card orange">
+                <div class="num">${totalPaid}</div>
+                <div class="lbl">Total Bayar</div>
+            </div>
+            <div class="summary-card red">
+                <div class="num">Rp${totalAmount.toLocaleString('id-ID')}</div>
+                <div class="lbl">Total Tunggakan</div>
+            </div>`;
+
+        const table = document.getElementById('recapTable');
+        if (students.length === 0) {
+            table.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">Belum ada data.</td></tr>';
+            return;
+        }
+
+        let html = `<thead><tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>Bayar</th>
+            <th>Tunggakan</th>
+            <th>Sisa Bayar</th>
+        </tr></thead><tbody>`;
+
+        studentRecaps.forEach((r, i) => {
+            html += `<tr>
+                <td>${i+1}</td>
+                <td>${r.name}</td>
+                <td><span class="badge badge-paid">${r.paid}x</span></td>
+                <td><span class="badge badge-unpaid">${r.unpaid}x</span></td>
+                <td class="${r.unpaid > 0 ? 'tunggakan-num' : 'tunggakan-zero'}">
+                    Rp${(r.unpaid * 1000).toLocaleString('id-ID')}
+                </td>
+            </tr>`;
+        });
+
+        html += '</tbody>';
+        table.innerHTML = html;
+    }
+
+    // ========================================
+    // EXPORT
+    // ========================================
+    function exportCSV() {
+        const dates = getAllPaymentDates();
+        const filterVal = document.getElementById('recapMonth').value;
+        const filteredDates = filterVal === 'all' ? dates : dates.filter(ds => ds.startsWith(filterVal));
+
+        let csv = '﻿'; // BOM for Excel UTF-8
+        csv += 'No,Nama,' + filteredDates.map(d => {
+            const dd = parseDate(d);
+            return `${dd.getDate()}/${dd.getMonth()+1}/${dd.getFullYear()}`;
+        }).join(',') + ',Tunggakan (Rp)\n';
+
+        state.students.forEach((name, i) => {
+            const paidFlags = filteredDates.map(d =>
+                (state.payments[d] && state.payments[d][name]) ? '✓' : '✗'
+            );
+            const unpaid = filteredDates.filter(d => !(state.payments[d] && state.payments[d][name])).length;
+            csv += `${i+1},"${name}",${paidFlags.join(',')},${unpaid * 1000}\n`;
+        });
+
+        downloadFile(csv, `Kas_TITL1_${filterVal === 'all' ? 'Semua' : filterVal}.csv`, 'text/csv;charset=utf-8');
+    }
+
+    function exportExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert('Library Excel belum dimuat. Coba lagi.');
+            return;
+        }
+
+        const dates = getAllPaymentDates();
+        const filterVal = document.getElementById('recapMonth').value;
+        const filteredDates = filterVal === 'all' ? dates : dates.filter(ds => ds.startsWith(filterVal));
+
+        const wsData = [['No', 'Nama']];
+        filteredDates.forEach(d => {
+            const dd = parseDate(d);
+            wsData[0].push(`${dd.getDate()}/${dd.getMonth()+1}`);
+        });
+        wsData[0].push('Tunggakan (Rp)');
+
+        state.students.forEach((name, i) => {
+            const row = [i+1, name];
+            filteredDates.forEach(d => {
+                row.push((state.payments[d] && state.payments[d][name]) ? '✓' : '✗');
+            });
+            const unpaid = filteredDates.filter(d => !(state.payments[d] && state.payments[d][name])).length;
+            row.push(unpaid * 1000);
+            wsData.push(row);
+        });
+
+        // Summary row
+        const totalDays = filteredDates.length;
+        wsData.push([]);
+        wsData.push(['', 'TOTAL', ...filteredDates.map(d => {
+            const count = state.students.filter(s => state.payments[d] && state.payments[d][s]).length;
+            return `${count}/${state.students.length}`;
+        }), '']);
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // Style: auto-width columns
+        ws['!cols'] = wsData[0].map((_, ci) => {
+            if (ci <= 1) return { wch: 15 };
+            if (ci === wsData[0].length - 1) return { wch: 15 };
+            return { wch: 6 };
+        });
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Rekap Kas');
+        XLSX.writeFile(wb, `Kas_TITL1_${filterVal === 'all' ? 'Semua' : filterVal}.xlsx`);
+    }
+
+    function downloadFile(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // ========================================
+    // PWA INSTALL
+    // ========================================
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBanner').classList.add('show');
+    });
+
+    function installApp() {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choice => {
+            if (choice.outcome === 'accepted') {
+                document.getElementById('installBanner').classList.remove('show');
+            }
+            deferredPrompt = null;
+        });
+    }
+
+    function dismissInstall() {
+        document.getElementById('installBanner').classList.remove('show');
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // Online/Offline detection
+    window.addEventListener('online', () => {
+        updateSyncUI('syncing');
+        syncToCloud();
+    });
+    window.addEventListener('offline', () => updateSyncUI('offline'));
+
+    // ========================================
+    // INIT
+    // ========================================
+    renderStudentList();
+    updateSyncUI(navigator.onLine ? 'online' : 'offline');
+
+    // Load from cloud on start
+    if (navigator.onLine) {
+        loadFromCloud();
+    }
+    </script>
+</body>
+</html>
