@@ -96,30 +96,7 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .btn-outline { background: transparent; color: #1a1a2e; border: 2px solid #e0e0e0; }
 .btn-outline:hover { border-color: #1a1a2e; }
 .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
-.btn-ghost { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
-.btn-ghost:hover { background: rgba(255,255,255,0.25); }
 
-/* ===== Modal ===== */
-.modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    z-index: 200; align-items: center; justify-content: center;
-    animation: fadeIn 0.15s;
-}
-.modal-overlay.show { display: flex; }
-.modal-box {
-    background: white; border-radius: 16px; padding: 24px 20px;
-    margin: 16px; max-width: 360px; width: 100%;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    animation: slideUp 0.2s;
-}
-.modal-box .modal-icon { font-size: 2.5rem; text-align: center; margin-bottom: 8px; }
-.modal-box h3 { font-size: 1rem; text-align: center; margin-bottom: 6px; color: #1a1a2e; }
-.modal-box p { font-size: 0.85rem; text-align: center; color: #666; margin-bottom: 18px; line-height: 1.4; }
-.modal-box .modal-name { font-weight: 700; color: #e74c3c; }
-.modal-actions { display: flex; gap: 10px; }
-.modal-actions .btn { flex: 1; text-align: center; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* ===== Student List ===== */
@@ -143,12 +120,6 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .day-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
 .day-btn:hover { border-color: #1a1a2e; }
 
-/* ===== Date Navigation ===== */
-.date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.date-nav .btn { padding: 8px 14px; font-size: 1rem; }
-.date-display { flex: 1; text-align: center; font-weight: 700; font-size: 0.95rem; color: #1a1a2e; }
-.date-display small { display: block; font-weight: 400; color: #888; font-size: 0.75rem; }
-
 /* ===== Payment Table ===== */
 .pay-table { width: 100%; border-collapse: collapse; }
 .pay-table th {
@@ -157,7 +128,23 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 }
 .pay-table td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 0.88rem; }
 .pay-table tr:last-child td { border-bottom: none; }
-.pay-check { width: 22px; height: 22px; cursor: pointer; accent-color: #27ae60; }
+.pay-table th.th-num, .pay-table td.td-num { width: 36px; text-align: center; }
+.pay-table th.th-tunggakan, .pay-table td.td-tunggakan { width: 80px; text-align: right; }
+.pay-table th.th-bayar, .pay-table td.td-bayar { width: 120px; text-align: center; }
+.pay-table th.th-aksi, .pay-table td.td-aksi { width: 60px; text-align: center; }
+
+.pay-input {
+    width: 80px; padding: 6px 8px; text-align: right;
+    border: 2px solid #e0e0e0; border-radius: 6px;
+    font-size: 0.88rem; outline: none; -webkit-appearance: none;
+}
+.pay-input:focus { border-color: #4fc3f7; }
+.pay-input:disabled { background: #f5f5f5; }
+
+.pay-btn {
+    padding: 6px 12px; font-size: 0.8rem; border-radius: 6px;
+    white-space: nowrap;
+}
 
 /* ===== Badges ===== */
 .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
@@ -184,7 +171,7 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .recap-table td { padding: 10px 10px; border-bottom: 1px solid #f0f0f0; }
 .recap-table tr:nth-child(even) { background: #f8f9fa; }
 .tunggakan-num { font-weight: 700; color: #e74c3c; }
-.tunggakan-zero { color: #27ae60; }
+.tunggakan-zero { color: #27ae60; font-weight: 600; }
 
 /* ===== Alerts & Helpers ===== */
 .warning-box {
@@ -192,10 +179,6 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
     border-radius: 8px; font-size: 0.82rem; color: #856404; margin-bottom: 14px;
 }
 .no-data { text-align: center; padding: 24px; color: #999; font-size: 0.88rem; }
-.no-data.success { color: #27ae60; }
-.warning-box.success {
-    background: #d4edda; border-color: #27ae60; color: #155724;
-}
 
 /* ===== Export & Filters ===== */
 .export-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
@@ -204,20 +187,6 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
     padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px;
     font-size: 0.85rem; font-family: inherit; background: white; outline: none;
 }
-
-/* ===== Mode Toggle ===== */
-.mode-toggle {
-    display: flex; background: #e8ecf0; border-radius: 10px; padding: 3px; margin-bottom: 14px;
-}
-.mode-btn {
-    flex: 1; padding: 8px 12px; text-align: center; border: none; border-radius: 8px;
-    font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-    background: transparent; color: #666; font-family: inherit;
-}
-.mode-btn.active { background: white; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-
-/* ===== Bulk Actions ===== */
-.bulk-actions { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
 
 /* ===== Search ===== */
 .search-box {
@@ -241,21 +210,6 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .install-banner.show { display: flex; }
 .install-banner .btn { background: #4fc3f7; color: #1a1a2e; padding: 6px 14px; font-size: 0.8rem; white-space: nowrap; }
 .install-banner .dismiss { background: none; color: #aaa; border: none; cursor: pointer; font-size: 1.2rem; padding: 4px; }
-
-/* ===== Loading ===== */
-.loading-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(26,26,46,0.6); display: flex; align-items: center;
-    justify-content: center; z-index: 999;
-}
-.loading-spinner {
-    background: white; padding: 24px 32px; border-radius: 12px;
-    text-align: center; font-weight: 600; color: #1a1a2e;
-}
-.loading-spinner .dots::after {
-    content: ''; animation: dots 1.5s steps(4,end) infinite;
-}
-@keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
 
 /* ===== Disabled Buttons ===== */
 .btn:disabled, .btn[disabled] {
@@ -299,7 +253,6 @@ label { display: block; font-size: 0.82rem; font-weight: 600; color: #555; margi
 .student-header h2 { margin: 0; }
 
 .desc-text { font-size: 0.82rem; color: #666; margin-bottom: 12px; }
-.info-text { font-size: 0.78rem; color: #888; margin-bottom: 10px; }
 .count-text { font-size: 0.8rem; color: #888; margin-bottom: 8px; }
 
 .holiday-item {

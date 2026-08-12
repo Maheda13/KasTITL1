@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KAS TITL 1</title>
     <meta name="theme-color" content="#1a1a2e">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
@@ -102,47 +101,11 @@
         <!-- INPUT KAS -->
         <div id="page-input" class="page">
             <div class="card">
-                <div class="mode-toggle">
-                    <button class="mode-btn active" id="modeHarian" onclick="setPayMode('harian')">📅 Harian</button>
-                    <button class="mode-btn" id="modeSiswa" onclick="setPayMode('siswa')">👤 Per Siswa</button>
-                </div>
-
-                <!-- MODE HARIAN -->
-                <div id="payModeHarian">
-                    <div class="date-nav">
-                        <button class="btn btn-outline btn-sm" onclick="changeDate(-1)">◀</button>
-                        <div class="date-display" id="dateDisplay"></div>
-                        <button class="btn btn-outline btn-sm" onclick="changeDate(1)">▶</button>
-                    </div>
-                    <div style="text-align:center; margin-bottom:10px;">
-                        <input type="date" id="datePicker" style="width:auto;" onchange="pickDate(this.value)">
-                    </div>
-                    <div class="bulk-actions">
-                        <button class="btn btn-sm btn-outline" onclick="checkAll()">✅ Pilih Semua</button>
-                        <button class="btn btn-sm btn-outline" onclick="uncheckAll()">⬜ Hapus Centang</button>
-                        <button class="btn btn-sm btn-outline" id="btnHidePaid" onclick="toggleHidePaid()" style="border-color:#4fc3f7;color:#0288d1;">👁 Sembunyikan sudah bayar</button>
-                    </div>
-                    <div id="payContent"></div>
-                    <div class="pagination" id="payPagination"></div>
-                </div>
-
-                <!-- MODE PER SISWA -->
-                <div id="payModeSiswa" style="display:none;">
-                    <div class="input-group">
-                        <label>Pilih Siswa</label>
-                        <select id="payStudentSelect">
-                            <option value="">— Pilih Nama —</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Nominal Bayar (Rp)</label>
-                        <input type="number" id="payAmount" placeholder="Misal: 5000" min="1000" step="1000"
-                            onkeydown="if(event.key==='Enter')processPerStudentPay()">
-                    </div>
-                    <p class="info-text">Rp1.000 = 1 hari. Rp5.000 = 5 hari berturut-turut (dari tanggal terlama yang belum bayar).</p>
-                    <button class="btn btn-success" onclick="processPerStudentPay()">💾 Simpan Pembayaran</button>
-                    <div id="perStudentResult" style="margin-top:12px;"></div>
-                </div>
+                <h2>💰 Pembayaran Kas</h2>
+                <p class="desc-text">Masukkan nominal bayar per siswa. Rp1.000 = 1 hari. Sisa pembayaran otomatis digunakan untuk hari berikutnya.</p>
+                <div id="paySummary"></div>
+                <div id="payContent"></div>
+                <div class="pagination" id="payPagination"></div>
             </div>
         </div>
 
@@ -169,19 +132,6 @@
             </div>
         </div>
     </main>
-
-    <!-- Modal Konfirmasi Hapus Centang -->
-    <div class="modal-overlay" id="uncheckModal">
-        <div class="modal-box">
-            <div class="modal-icon">⚠️</div>
-            <h3>Batalkan Pembayaran?</h3>
-            <p>Siswa <span class="modal-name" id="modalStudentName"></span> sudah ditandai <b>sudah bayar</b> untuk tanggal ini. Centang akan dihapus dan status berubah menjadi <b>belum bayar</b>.</p>
-            <div class="modal-actions">
-                <button class="btn btn-outline" onclick="cancelUncheck()">Batal</button>
-                <button class="btn btn-danger" onclick="confirmUncheck()" style="flex:1;text-align:center;">Hapus Centang</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal Konfirmasi Umum -->
     <div class="confirm-overlay" id="confirmModal">
